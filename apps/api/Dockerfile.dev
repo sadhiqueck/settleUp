@@ -1,0 +1,27 @@
+FROM node:22-alpine
+
+# OpenSSL needed by Prisma
+RUN apk add --no-cache openssl
+RUN npm install -g pnpm turbo
+
+WORKDIR /app
+
+# Copy essential workspace configuration
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY apps/api/package.json apps/api/
+COPY apps/web/package.json apps/web/
+COPY packages/shared/package.json packages/shared/
+
+# Install dependencies (respecting the workspace)
+RUN pnpm install
+
+# Copy all source
+COPY . .
+
+# Generate Prisma Client explicitly for the API
+RUN pnpm --filter @settleup/api exec prisma generate
+
+EXPOSE 3000
+
+# Start NestJS development server
+CMD ["pnpm", "--filter", "@settleup/api", "start:dev"]

@@ -1,0 +1,25 @@
+# Docker Implementation Walkthrough
+
+We are progressively building your Docker architecture, starting with **Phase 1: Foundational Compose Dev Setup**. 
+
+## What was completed in Phase 1?
+
+1. **Foundational `docker-compose.yml`**
+   - Created a strict, modern definition, dropping fully deprecated attributes such as `version: "3"`.
+   - Bootstrapped PostgreSQL container on port `5432`.
+   - Setup an `api` service mapping to `3000` and relying on the `service_healthy` metric from PostgreSQL to prevent boot failures.
+   - Setup a `web` service mapping to `5173`.
+2. **Local Development Dockerfile.dev**
+   - Implemented `apps/api/Dockerfile.dev` using `node:22-alpine`, passing through the Turborepo workspace. It runs `prisma db push` on instantiation to instantly sync the database logic before spinning the Nest server on.
+   - Implemented `apps/web/Dockerfile.dev` using `node:22-alpine` rendering the Vite builder.
+3. **Safety Ignore Protocol**
+   - Early addition of `.dockerignore` to prevent transferring the highly-bloated local `node_modules`. This prevents your host Windows-based engine from overriding Alpine-based binaries (such as Prisma's Linux bindings).
+
+## Current Status
+
+We have triggered the very first `docker compose up --build -d`. Currently, Docker is unpacking the multi-gigabyte node development containers. This initial build takes a couple of minutes to process the workspace correctly into the images for the first time.
+
+> [!TIP]
+> The initial build and unpack is the heaviest component. Your next command to boot Docker locally will be instantaneous.
+
+Once the containers are successfully running, we can proceed to **Phase 2: Hot-Reloading (`watch`)**.

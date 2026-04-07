@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: settleup
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d settleup"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/settleup?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # volumes: # 
+    #   - .:/app
+    #   - /app/node_modules # (Keeps the container's node_modules safe)
+
+    # We override the CMD to ensure the database is seeded/pushed before starting the NestJS server.
+    command: sh -c "pnpm --filter @settleup/api exec prisma db push && pnpm --filter @settleup/api start:dev"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile.dev
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    depends_on:
+      - api
+    # volumes:
+    #   - .:/app
+    #   - /app/node_modules
+
+volumes:
+  db-data:
