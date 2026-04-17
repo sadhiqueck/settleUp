@@ -2,6 +2,7 @@
   "name": "settleup",
   "version": "1.0.0",
   "private": true,
+
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
@@ -11,5 +12,7 @@
   },
   "devDependencies": {
     "turbo": "^2.8.15"
-  }
+  },
+    "packageManager": "pnpm@10.0.0"
+ 
 }
