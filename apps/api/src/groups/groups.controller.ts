@@ -1,4 +1,11 @@
-import { Body, Controller, Post, Get, UsePipes, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Get,
+  UsePipes,
+  UseGuards,
+} from '@nestjs/common';
 import { GroupsService } from './groups.service';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { createGroupSchema } from '@settleup/shared';

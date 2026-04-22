@@ -23,7 +23,7 @@ exports.AppModule = AppModule = __decorate([
             config_1.ConfigModule.forRoot({ isGlobal: true }),
             prisma_module_1.PrismaModule,
             auth_module_1.AuthModule,
-            groups_module_1.GroupsModule
+            groups_module_1.GroupsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

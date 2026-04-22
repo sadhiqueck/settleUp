@@ -109,12 +109,19 @@ export class GroupsService {
 
       return groupMemberships.map((membership) => {
         const g = membership.group;
-        const totalExpense = g.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+        const totalExpense = g.expenses.reduce(
+          (sum, exp) => sum + exp.amount,
+          0,
+        );
         const userBalance = g.balances.length > 0 ? g.balances[0].balance : 0;
-        const lastActivityDate = g.activities.length > 0 ? g.activities[0].createdAt : g.updatedAt;
-        
+        const lastActivityDate =
+          g.activities.length > 0 ? g.activities[0].createdAt : g.updatedAt;
+
         // Format relative time or simple date
-        const lastActivity = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(lastActivityDate));
+        const lastActivity = new Intl.DateTimeFormat('en-US', {
+          month: 'short',
+          day: 'numeric',
+        }).format(new Date(lastActivityDate));
 
         return {
           id: g.id,
