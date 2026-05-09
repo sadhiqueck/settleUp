@@ -369,33 +369,33 @@ export class GroupsService {
     };
   }
 
-  // async getGroupContacts(userId: string, groupId: string) {
-  //   // 1. Get all group IDs the current user is in
-  //   const userGroups = await this.prisma.groupMember.findMany({
-  //     where: { userId, isActive: true },
-  //     select: { groupId: true },
-  //   });
-  //   const groupIds = userGroups.map((g) => g.groupId);
+  async getGroupContacts(userId: string, groupId: string) {
+    // 1. Get all group IDs the current user is in
+    const userGroups = await this.prisma.groupMember.findMany({
+      where: { userId, isActive: true },
+      select: { groupId: true },
+    });
+    const groupIds = userGroups.map((g) => g.groupId);
 
-  //   // 2. Find unique users in these groups, excluding the current user and those already in target group
-  //   const contacts = await this.prisma.user.findMany({
-  //     where: {
-  //       id: { not: userId },
-  //       groupMembers: {
-  //         some: { groupId: { in: groupIds }, isActive: true },
-  //         none: { groupId: groupId, isActive: true },
-  //       },
-  //     },
-  //     select: {
-  //       id: true,
-  //       name: true,
-  //       email: true,
-  //       avatarUrl: true,
-  //     },
-  //   });
+    // 2. Find unique users in these groups, excluding the current user and those already in target group
+    const contacts = await this.prisma.user.findMany({
+      where: {
+        id: { not: userId },
+        groupMembers: {
+          some: { groupId: { in: groupIds }, isActive: true },
+          none: { groupId: groupId, isActive: true },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatarUrl: true,
+      },
+    });
 
-  //   return contacts;
-  // }
+    return contacts;
+  }
 
   // async addMemberDirectly(adminId: string, groupId: string, memberId: string) {
   //   const group = await this.prisma.group.findUnique({

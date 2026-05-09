@@ -74,18 +74,18 @@ export class GroupsController {
     return this.groupsService.joinGroupUsingCode(userId, inviteCode);
   }
 
-  // @Get(':id/contacts')
-  // @UseGuards(JwtAuthGuard)
-  // async getGroupContacts(
-  //   @Param('id') groupId: string,
-  //   @GetUser('id') userId: string,
-  // ) {
-  //   const contacts = await this.groupsService.getGroupContacts(userId, groupId);
-  //   return {
-  //     message: 'Contacts successfully fetched',
-  //     contacts,
-  //   };
-  // }
+  @Get(':id/contacts')
+  @UseGuards(JwtAuthGuard)
+  async getGroupContacts(
+    @Param('id') groupId: string,
+    @GetUser('id') userId: string,
+  ) {
+    const contacts = await this.groupsService.getGroupContacts(userId, groupId);
+    return {
+      message: 'Contacts successfully fetched',
+      contacts,
+    };
+  }
 
   // @Post(':id/members')
   // @UseGuards(JwtAuthGuard)
