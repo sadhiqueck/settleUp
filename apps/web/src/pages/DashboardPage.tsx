@@ -43,7 +43,7 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react";
-import { useGroups, useCreateGroup } from "@/hooks/useGroups";
+import { useGroups, useCreateGroup, useJoinGroup } from "@/hooks/useGroups";
 import type { GroupData } from "@/hooks/useGroups";
 
 const CATEGORIES = [
@@ -89,13 +89,12 @@ function StatCard({
           {label}
         </p>
         <p
-          className={`text-2xl font-bold font-sans mt-1 ${
-            variant === "green"
+          className={`text-2xl font-bold font-sans mt-1 ${variant === "green"
               ? "clay-stat-green"
               : variant === "red"
                 ? "clay-stat-red"
                 : "text-foreground"
-          }`}
+            }`}
         >
           {value}
         </p>
@@ -328,6 +327,7 @@ function ErrorState({
 export default function DashboardPage() {
   const { data: groups = [], isLoading, isError, error, refetch } = useGroups();
   const createGroupMutation = useCreateGroup();
+  const joinGroupMutation = useJoinGroup();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
@@ -340,11 +340,11 @@ export default function DashboardPage() {
   const userName = user?.name?.split(" ")[0] || "there";
   const userInitials = user?.name
     ? user.name
-        .split(" ")
-        .map((w: string) => w[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
+      .split(" ")
+      .map((w: string) => w[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
     : "U";
 
   // Loading state
@@ -383,6 +383,20 @@ export default function DashboardPage() {
       },
     );
   };
+
+  const handleJoinSubmit = (e:React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const inviteCode = formData.get("inviteCode") as string;
+    if (inviteCode) {
+      joinGroupMutation.mutate(inviteCode, {
+        onSuccess: () => {
+          setJoinOpen(false);
+          (e.target as HTMLFormElement).reset();
+        },
+      });
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -476,7 +490,7 @@ export default function DashboardPage() {
             <h3 className="font-display text-xl font-bold text-foreground">
               Your Groups
             </h3>
-            <Badge className="clay-badge clay-badge-neutral">
+            <Badge className="clay-badge clay-badge">
               {filteredGroups.length}
             </Badge>
           </div>
@@ -589,7 +603,7 @@ export default function DashboardPage() {
                     <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-500">
                       <AlertCircle size={18} />
                       <p className="text-sm font-medium">
-                        {(createGroupMutation.error as any)?.response?.data
+                        {(createGroupMutation.error as { response?: { data?: { message?: string } } })?.response?.data
                           ?.message || "Failed to create group"}
                       </p>
                     </div>
@@ -648,10 +662,7 @@ export default function DashboardPage() {
                 </DialogHeader>
 
                 <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    setJoinOpen(false);
-                  }}
+                  onSubmit={handleJoinSubmit}
                   className="flex flex-col gap-5"
                 >
                   <div className="flex flex-col gap-2">
@@ -663,11 +674,23 @@ export default function DashboardPage() {
                     </Label>
                     <Input
                       id="invite-code"
+                      name="inviteCode"
                       placeholder="e.g. ABC-12345"
                       className="clay-input text-center text-lg font-mono tracking-widest"
                       required
+                      disabled={joinGroupMutation.isPending}
                     />
                   </div>
+
+                  {joinGroupMutation.isError && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-500">
+                      <AlertCircle size={18} />
+                      <p className="text-sm font-medium">
+                        {(joinGroupMutation.error as {  response?: { data?: { message?: string } } })?.response?.data
+                          ?.message || "Failed to join group. Check the code."}
+                      </p>
+                    </div>
+                  )}
 
                   <DialogFooter>
                     <Button
@@ -675,14 +698,19 @@ export default function DashboardPage() {
                       variant="ghost"
                       onClick={() => setJoinOpen(false)}
                       className="clay-btn-ghost font-display"
+                      disabled={joinGroupMutation.isPending}
                     >
                       Cancel
                     </Button>
                     <button
                       type="submit"
-                      className="clay-btn-primary px-6 py-2.5 text-sm font-display font-bold"
+                      disabled={joinGroupMutation.isPending}
+                      className="clay-btn-primary px-6 py-2.5 text-sm font-display font-bold flex items-center gap-2"
                     >
-                      Join Group
+                      {joinGroupMutation.isPending && (
+                        <Loader2 className="animate-spin" size={16} />
+                      )}
+                      {joinGroupMutation.isPending ? "Joining..." : "Join Group"}
                     </button>
                   </DialogFooter>
                 </form>
@@ -695,7 +723,7 @@ export default function DashboardPage() {
         {isError ? (
           <ErrorState
             message={
-              (error as any)?.response?.data?.message ||
+              (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
               "Could not load your groups. Please try again."
             }
             onRetry={() => refetch()}

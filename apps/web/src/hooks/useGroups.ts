@@ -56,6 +56,18 @@ export interface GroupActivity {
   target?: string;
   timestamp: string;
 }
+export interface ContactData {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+}
+export interface ContactData {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+}
 
 export interface GroupDetailsData extends GroupData {
   expenses: GroupExpense[];
@@ -120,6 +132,97 @@ export function useCreateGroup() {
     mutationFn: createGroup,
     onSuccess: () => {
       // Invalidate the groups query to refetch the list after creation
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+    },
+  });
+}
+
+/* ─── Join a group ─── */
+
+async function joinGroup(inviteCode: string) {
+  const { data } = await apiClient.post("/groups/join", { inviteCode });
+  return data;
+}
+
+export function useJoinGroup() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: joinGroup,
+    onSuccess: () => {
+      // Invalidate to fetch the newly joined group
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+    },
+  });
+}
+
+/* ─── Fetch Group Contacts ─── */
+
+async function fetchGroupContacts(groupId: string): Promise<ContactData[]> {
+  const { data } = await apiClient.get<{ message: string; contacts: ContactData[] }>(`/groups/${groupId}/contacts`);
+  return data.contacts;
+}
+
+export function useGroupContacts(groupId: string | undefined) {
+  return useQuery<ContactData[]>({
+    queryKey: ["groupContacts", groupId],
+    queryFn: () => fetchGroupContacts(groupId!),
+    enabled: !!groupId,
+  });
+}
+
+/* ─── Add Member Directly ─── */
+
+async function addMemberDirectly({ groupId, userId }: { groupId: string; userId: string }) {
+  const { data } = await apiClient.post(`/groups/${groupId}/members`, { userId });
+  return data;
+}
+
+export function useAddMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: addMemberDirectly,
+    onSuccess: (_, variables) => {
+      // Refetch the group details and contacts after adding a member
+      queryClient.invalidateQueries({ queryKey: ["group", variables.groupId] });
+      queryClient.invalidateQueries({ queryKey: ["groupContacts", variables.groupId] });
+    },
+  });
+}
+
+/* ─── Add Member By Email ─── */
+
+async function addMemberByEmail({ groupId, email }: { groupId: string; email: string }) {
+  const { data } = await apiClient.post(`/groups/${groupId}/members/email`, { email });
+  return data;
+}
+
+export function useAddMemberByEmail() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: addMemberByEmail,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["group", variables.groupId] });
+      queryClient.invalidateQueries({ queryKey: ["groupContacts", variables.groupId] });
+    },
+  });
+}
+
+/* ─── Leave Group ─── */
+
+async function leaveGroup(groupId: string) {
+  const { data } = await apiClient.post(`/groups/${groupId}/leave`);
+  return data;
+}
+
+export function useLeaveGroup() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: leaveGroup,
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
     },
   });

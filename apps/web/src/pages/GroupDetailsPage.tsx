@@ -33,8 +33,11 @@ import {
   Copy,
   Share2,
   Plus,
+  LogOut,
+  Mail,
 } from "lucide-react";
-import { useGroup } from "@/hooks/useGroups";
+import { useGroup, useGroupContacts, useAddMember, useAddMemberByEmail, useLeaveGroup } from "@/hooks/useGroups";
+import type { AxiosError } from "axios";
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-IN", {
@@ -47,14 +50,16 @@ function formatCurrency(amount: number): string {
 export default function GroupDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"feed" | "balances" | "activity">(
-    "feed",
-  );
+  const [activeTab, setActiveTab] = useState<"feed" | "balances" | "activity">("feed");
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const { data: group, isLoading, error } = useGroup(id);
+  const { data: contacts, isLoading: contactsLoading } = useGroupContacts(id);
+  const addMemberMutation = useAddMember();
+  const addMemberByEmailMutation = useAddMemberByEmail();
+  const leaveGroupMutation = useLeaveGroup();
 
   if (isLoading) {
     return (
@@ -99,13 +104,34 @@ export default function GroupDetailsPage() {
             </h1>
           </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="clay-btn-ghost rounded-full size-10 relative shrink-0"
-          >
-            <ClayBellIcon size={22} />
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="clay-btn-ghost rounded-full size-10 relative shrink-0"
+              onClick={() => {
+                if (window.confirm("Are you sure you want to leave this group? Make sure your balance is 0.")) {
+                  leaveGroupMutation.mutate(id!, {
+                    onSuccess: () => navigate("/"),
+                    onError: (error: Error) => {
+                      const err = error as AxiosError<{ message: string }>;
+                      alert(err.response?.data?.message || "Failed to leave group");
+                    }
+                  });
+                }
+              }}
+              disabled={leaveGroupMutation.isPending}
+            >
+              {leaveGroupMutation.isPending ? <Loader2 className="animate-spin" size={20} /> : <LogOut size={20} className="text-red-500" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="clay-btn-ghost rounded-full size-10 relative shrink-0"
+            >
+              <ClayBellIcon size={22} />
+            </Button>
+          </div>
         </div>
       </nav>
 
@@ -240,7 +266,7 @@ export default function GroupDetailsPage() {
                   <h3 className="font-display font-bold text-lg mb-1">
                     No expenses yet
                   </h3>
-                  <p className="text-sm text-muted-foreground max-w-[200px] mx-auto">
+                  <p className="text-sm text-muted-foreground max-w-50 mx-auto">
                     Start by adding your first expense to the group!
                   </p>
                   <Button
@@ -596,14 +622,14 @@ export default function GroupDetailsPage() {
                 try {
                   await navigator.share({
                     title: `Join ${group.name} on SettleUp`,
-                    text: `Hey! Join my group on SettleUp to split expenses easily. Use my invite code: ${group.inviteCode}`,
+                    text: `Hey! Join my group on SettleUp to split expenses easily. Use this invite link: ${import.meta.env.VITE_BASE_URL}/groups/join/${group.inviteCode}`,
                   });
                 } catch (error) {
                   console.error("Error sharing", error);
                 }
               } else if (group.inviteCode) {
                 // Fallback for browsers that don't support Web Share API
-                navigator.clipboard.writeText(`Hey! Join my group on SettleUp using this invite code: ${group.inviteCode}`);
+                navigator.clipboard.writeText(`${import.meta.env.VITE_BASE_URL}/groups/join/${group.inviteCode}`);
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2000);
               }
@@ -612,6 +638,106 @@ export default function GroupDetailsPage() {
             <Share2 size={18} />
             Share Invite Code
           </Button>
+
+          {/* Add By Email */}
+          <div className="w-full mt-6">
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const email = formData.get("email") as string;
+              if (email && id) {
+                addMemberByEmailMutation.mutate({ groupId: id, email }, {
+                  onSuccess: () => (e.target as HTMLFormElement).reset(),
+                  onError: (error: Error) => {
+                    const err = error as AxiosError<{ message: string }>;
+                    alert(err.response?.data?.message || "Failed to add user");
+                  }
+                });
+              }
+            }} className="flex gap-2">
+              <Input
+                name="email"
+                type="email"
+                placeholder="Add by email address..."
+                className="clay-input flex-1 h-12 text-sm"
+                required
+                disabled={addMemberByEmailMutation.isPending}
+              />
+              <Button
+                type="submit"
+                className="clay-btn-secondary h-12 px-4 rounded-xl flex items-center gap-2"
+                disabled={addMemberByEmailMutation.isPending}
+              >
+                {addMemberByEmailMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />}
+                <span className="font-display font-semibold text-sm">Add</span>
+              </Button>
+            </form>
+          </div>
+
+          {/* Add Friends Section */}
+          <div className="w-full mt-8">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Or Add Friends</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
+            {contactsLoading ? (
+              <div className="flex justify-center p-4">
+                <Loader2 className="animate-spin text-muted-foreground" />
+              </div>
+            ) : contacts && contacts.length > 0 ? (
+              <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1 text-left">
+                {contacts.map((contact) => (
+                  <div
+                    key={contact.id}
+                    className="flex items-center justify-between p-2 rounded-xl hover:bg-soft-clay transition-colors group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar className="size-8">
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                          {contact.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold truncate max-w-30">
+                          {contact.name}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground truncate max-w-30">
+                          {contact.email}
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                      onClick={() => {
+                        if (id) {
+                          addMemberMutation.mutate({
+                            groupId: id,
+                            userId: contact.id,
+                          });
+                        }
+                      }}
+                      disabled={addMemberMutation.isPending}
+                    >
+                      {addMemberMutation.isPending &&
+                      addMemberMutation.variables?.userId === contact.id ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Plus className="size-4" />
+                      )}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground p-2">
+                No recent contacts found to add directly.
+              </p>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
