@@ -87,38 +87,38 @@ export class GroupsController {
     };
   }
 
-  // @Post(':id/members')
-  // @UseGuards(JwtAuthGuard)
-  // async addMemberDirectly(
-  //   @Param('id') groupId: string,
-  //   @Body('userId') memberId: string,
-  //   @GetUser('id') adminId: string,
-  // ) {
-  //   if (!memberId) {
-  //     throw new Error('User ID is required');
-  //   }
-  //   return this.groupsService.addMemberDirectly(adminId, groupId, memberId);
-  // }
+  @Post(':id/members')
+  @UseGuards(JwtAuthGuard)
+  async addMemberDirectly(
+    @Param('id') groupId: string,
+    @Body('userId') memberId: string,
+    @GetUser('id') adminId: string,
+  ) {
+    if (!memberId) {
+      throw new Error('User ID is required');
+    }
+    return this.groupsService.addMemberDirectly(adminId, groupId, memberId);
+  }
 
-  // @Post(':id/members/email')
-  // @UseGuards(JwtAuthGuard)
-  // async addMemberByEmail(
-  //   @Param('id') groupId: string,
-  //   @Body('email') email: string,
-  //   @GetUser('id') adminId: string,
-  // ) {
-  //   if (!email) {
-  //     throw new Error('Email is required');
-  //   }
-  //   return this.groupsService.addMemberByEmail(adminId, groupId, email);
-  // }
+  @Post(':id/members/email')
+  @UseGuards(JwtAuthGuard)
+  async addMemberByEmail(
+    @Param('id') groupId: string,
+    @Body('email') email: string,
+    @GetUser('id') adminId: string,
+  ) {
+    if (!email) {
+      throw new Error('Email is required');
+    }
+    return this.groupsService.addMemberByEmail(adminId, groupId, email);
+  }
 
-  // @Post(':id/leave')
-  // @UseGuards(JwtAuthGuard)
-  // async leaveGroup(
-  //   @Param('id') groupId: string,
-  //   @GetUser('id') userId: string,
-  // ) {
-  //   return this.groupsService.leaveGroup(userId, groupId);
-  // }
+  @Post(':id/leave')
+  @UseGuards(JwtAuthGuard)
+  async leaveGroup(
+    @Param('id') groupId: string,
+    @GetUser('id') userId: string,
+  ) {
+    return this.groupsService.leaveGroup(userId, groupId);
+  }
 }

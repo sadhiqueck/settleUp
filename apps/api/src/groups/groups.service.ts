@@ -295,74 +295,81 @@ export class GroupsService {
     };
   }
 
-  async joinGroupUsingCode(userId: string, inviteCode: string) {
-    //1. validate Group
-    const group = await this.prisma.group.findUnique({ where: { inviteCode } });
-    if (!group)
-      throw new NotFoundException("Group with this code doesn't exist");
-
-    //2. check if user is already a member
-    const existingMembership = await this.prisma.groupMember.findFirst({
-      where: { userId, groupId: group.id, isActive: true },
+  private async internalAddMemberToGroup(
+    userId: string,
+    groupId: string,
+    actionLogText: string,
+  ) {
+    const existingMembership = await this.prisma.groupMember.findUnique({
+      where: { userId_groupId: { userId, groupId } },
     });
 
-    if (existingMembership) {
-      throw new ConflictException('You are already a member of this group.');
+    if (existingMembership && existingMembership.isActive) {
+      throw new ConflictException('User is already a member');
     }
-    //3. validate member limit
-    const memberCount = await this.prisma.groupMember.count({
-      where: { groupId: group.id, isActive: true },
-    });
 
+    const memberCount = await this.prisma.groupMember.count({
+      where: { groupId, isActive: true },
+    });
     const maxMembers = this.configService.get<number>('MAX_GROUP_MEMBERS', 50);
     if (memberCount >= maxMembers) {
       throw new ForbiddenException(
         `This group has reached its maximum limit of ${maxMembers} members.`,
       );
     }
-    // 4. Add User to Group (Transaction)
-    const result = await this.prisma.$transaction(async (tx) => {
-      // a. Add user as a member
-      await tx.groupMember.create({
-        data: {
-          userId: userId,
-          groupId: group.id,
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.groupMember.upsert({
+        where: { userId_groupId: { userId, groupId } },
+        create: {
+          userId,
+          groupId,
           role: GroupRole.MEMBER,
         },
-      });
-
-      //b. Initialize user balance for this group
-      await tx.groupMemberBalance.create({
-        data: {
-          userId: userId,
-          groupId: group.id,
-          balance: 0,
+        update: {
+          isActive: true,
         },
       });
 
-      //c. Log the "Join" activity
+      const existingBalance = await tx.groupMemberBalance.findUnique({
+        where: { groupId_userId: { userId, groupId } },
+      });
+
+      if (!existingBalance) {
+        await tx.groupMemberBalance.create({
+          data: { userId, groupId, balance: 0 },
+        });
+      }
+
       await tx.activityLog.create({
         data: {
-          groupId: group.id,
-          userId: userId,
+          groupId,
+          userId,
           type: ActivityType.GROUP_UPDATED,
-          metadata: {
-            action: 'joined the group',
-          },
-        },
-      });
-
-      return await tx.group.findUnique({
-        where: { id: group.id },
-        select: {
-          id: true,
-          name: true,
-          category: true,
-          description: true,
-          coverImage: true,
+          metadata: { action: actionLogText },
         },
       });
     });
+  }
+
+  async joinGroupUsingCode(userId: string, inviteCode: string) {
+    const group = await this.prisma.group.findUnique({ where: { inviteCode } });
+    if (!group)
+      throw new NotFoundException("Group with this code doesn't exist");
+
+    await this.internalAddMemberToGroup(userId, group.id, 'joined the group');
+
+    const result = await this.prisma.group.findUnique({
+      where: { id: group.id },
+      select: {
+        id: true,
+        name: true,
+        category: true,
+        description: true,
+        coverImage: true,
+      },
+    });
+
     return {
       message: 'Successfully joined the group!',
       group: result,
@@ -381,7 +388,7 @@ export class GroupsService {
     const contacts = await this.prisma.user.findMany({
       where: {
         id: { not: userId },
-        groupMembers: {
+        groupMemberships: {
           some: { groupId: { in: groupIds }, isActive: true },
           none: { groupId: groupId, isActive: true },
         },
@@ -397,120 +404,75 @@ export class GroupsService {
     return contacts;
   }
 
-  // async addMemberDirectly(adminId: string, groupId: string, memberId: string) {
-  //   const group = await this.prisma.group.findUnique({
-  //     where: { id: groupId },
-  //   });
-  //   if (!group) throw new NotFoundException('Group not found');
+  async addMemberDirectly(adminId: string, groupId: string, memberId: string) {
+    const group = await this.prisma.group.findUnique({
+      where: { id: groupId },
+    });
+    if (!group) throw new NotFoundException('Group not found');
 
-  //   const adminMembership = await this.prisma.groupMember.findUnique({
-  //     where: { userId_groupId: { userId: adminId, groupId } },
-  //   });
-  //   if (!adminMembership)
-  //     throw new ForbiddenException('You are not a member of this group');
+    const adminMembership = await this.prisma.groupMember.findUnique({
+      where: { userId_groupId: { userId: adminId, groupId } },
+    });
+    if (!adminMembership)
+      throw new ForbiddenException('You are not a member of this group');
 
-  //   const existingMembership = await this.prisma.groupMember.findUnique({
-  //     where: { userId_groupId: { userId: memberId, groupId } },
-  //   });
+    await this.internalAddMemberToGroup(
+      memberId,
+      groupId,
+      'was added to the group',
+    );
 
-  //   if (existingMembership && existingMembership.isActive) {
-  //     throw new ConflictException('User is already a member');
-  //   }
+    return { message: 'Member added successfully' };
+  }
 
-  //   const memberCount = await this.prisma.groupMember.count({
-  //     where: { groupId, isActive: true },
-  //   });
-  //   const maxMembers = this.configService.get<number>('MAX_GROUP_MEMBERS', 50);
-  //   if (memberCount >= maxMembers) {
-  //     throw new ForbiddenException(
-  //       `This group has reached its maximum limit of ${maxMembers} members.`,
-  //     );
-  //   }
+  async addMemberByEmail(adminId: string, groupId: string, email: string) {
+    const userToAdd = await this.prisma.user.findUnique({ where: { email } });
+    if (!userToAdd) {
+      throw new NotFoundException('User with this email not found');
+    }
+    return this.addMemberDirectly(adminId, groupId, userToAdd.id);
+  }
 
-  //   await this.prisma.$transaction(async (tx) => {
-  //     await tx.groupMember.upsert({
-  //       where: { userId_groupId: { userId: memberId, groupId } },
-  //       create: {
-  //         userId: memberId,
-  //         groupId,
-  //         role: GroupRole.MEMBER,
-  //       },
-  //       update: {
-  //         isActive: true,
-  //       },
-  //     });
+  async leaveGroup(userId: string, groupId: string) {
+    const group = await this.prisma.group.findUnique({
+      where: { id: groupId },
+    });
+    if (!group) throw new NotFoundException('Group not found');
 
-  //     const existingBalance = await tx.groupMemberBalance.findUnique({
-  //       where: { userId_groupId: { userId: memberId, groupId } },
-  //     });
+    const membership = await this.prisma.groupMember.findUnique({
+      where: { userId_groupId: { userId, groupId } },
+    });
 
-  //     if (!existingBalance) {
-  //       await tx.groupMemberBalance.create({
-  //         data: { userId: memberId, groupId, balance: 0 },
-  //       });
-  //     }
+    if (!membership || !membership.isActive) {
+      throw new ConflictException('You are not an active member of this group');
+    }
 
-  //     await tx.activityLog.create({
-  //       data: {
-  //         groupId,
-  //         userId: memberId,
-  //         type: ActivityType.GROUP_UPDATED,
-  //         metadata: { action: 'was added to the group' },
-  //       },
-  //     });
-  //   });
+    const balance = await this.prisma.groupMemberBalance.findUnique({
+      where: { groupId_userId: { userId, groupId } },
+    });
 
-  //   return { message: 'Member added successfully' };
-  // }
+    if (balance && balance.balance !== 0) {
+      throw new ForbiddenException(
+        'You cannot leave the group until your balances are settled (balance must be 0).',
+      );
+    }
 
-  // async addMemberByEmail(adminId: string, groupId: string, email: string) {
-  //   const userToAdd = await this.prisma.user.findUnique({ where: { email } });
-  //   if (!userToAdd) {
-  //     throw new NotFoundException('User with this email not found');
-  //   }
-  //   return this.addMemberDirectly(adminId, groupId, userToAdd.id);
-  // }
+    await this.prisma.$transaction(async (tx) => {
+      await tx.groupMember.update({
+        where: { userId_groupId: { userId, groupId } },
+        data: { isActive: false },
+      });
 
-  // async leaveGroup(userId: string, groupId: string) {
-  //   const group = await this.prisma.group.findUnique({
-  //     where: { id: groupId },
-  //   });
-  //   if (!group) throw new NotFoundException('Group not found');
+      await tx.activityLog.create({
+        data: {
+          groupId,
+          userId,
+          type: ActivityType.GROUP_UPDATED,
+          metadata: { action: 'left the group' },
+        },
+      });
+    });
 
-  //   const membership = await this.prisma.groupMember.findUnique({
-  //     where: { userId_groupId: { userId, groupId } },
-  //   });
-
-  //   if (!membership || !membership.isActive) {
-  //     throw new ConflictException('You are not an active member of this group');
-  //   }
-
-  //   const balance = await this.prisma.groupMemberBalance.findUnique({
-  //     where: { userId_groupId: { userId, groupId } },
-  //   });
-
-  //   if (balance && balance.balance !== 0) {
-  //     throw new ForbiddenException(
-  //       'You cannot leave the group until your balances are settled (balance must be 0).',
-  //     );
-  //   }
-
-  //   await this.prisma.$transaction(async (tx) => {
-  //     await tx.groupMember.update({
-  //       where: { userId_groupId: { userId, groupId } },
-  //       data: { isActive: false },
-  //     });
-
-  //     await tx.activityLog.create({
-  //       data: {
-  //         groupId,
-  //         userId,
-  //         type: ActivityType.GROUP_UPDATED,
-  //         metadata: { action: 'left the group' },
-  //       },
-  //     });
-  //   });
-
-  //   return { message: 'Successfully left the group' };
-  // }
+    return { message: 'Successfully left the group' };
+  }
 }
