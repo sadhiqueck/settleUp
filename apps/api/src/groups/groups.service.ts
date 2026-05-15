@@ -21,18 +21,26 @@ const GROUP_CATEGORY_MAP: Record<CreateGroupInput['category'], GroupCategory> =
     OTHER: GroupCategory.OTHER,
   };
 
-const colors = [
-  '#FF5733', // Coral
-  '#33FF57', // Lime
-  '#3357FF', // Blue
-  '#F333FF', // Pink
-  '#FF33A8', // Magenta
-  '#33FFF5', // Cyan
-  '#F5FF33', // Yellow
-  '#FF8C33', // Orange
-  '#8C33FF', // Purple
-  '#33FF8C', // Spring Green
+
+
+const COLORS = [
+  '#FF4B4B', // Red
+  '#00C700', // Primary Green
+  '#FF8A00', // Orange
+  '#00E5FF', // Cyan
+  '#8B5CF6', // Purple
+  '#EC4899', // Pink
+  '#14B8A6', // Teal
+  '#F59E0B', // Amber
 ];
+
+const hashString = (str: string) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash);
+};
 
 @Injectable()
 export class GroupsService {
@@ -181,26 +189,6 @@ export class GroupsService {
         FRIENDS: 'Other',
         OTHER: 'Other',
       };
-
-      const colors = [
-        '#FF4B4B', // Red
-        '#00C700', // Primary Green
-        '#FF8A00', // Orange
-        '#00E5FF', // Cyan
-        '#8B5CF6', // Purple
-        '#EC4899', // Pink
-        '#14B8A6', // Teal
-        '#F59E0B', // Amber
-      ];
-
-      const hashString = (str: string) => {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-          hash = str.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        return Math.abs(hash);
-      };
-
       return groupMemberships.map((membership) => {
         const g = membership.group;
         const totalExpense = g.expenses.reduce(
@@ -229,7 +217,7 @@ export class GroupsService {
               id: m.userId,
               name: m.user.name,
               initial: m.user.name.charAt(0).toUpperCase(),
-              color: colors[hash % colors.length],
+              color: COLORS[hash % COLORS.length],
               avatarUrl: m.user.avatarUrl,
             };
           }),
@@ -286,14 +274,6 @@ export class GroupsService {
       day: 'numeric',
     }).format(new Date(lastActivityDate));
 
-    const hashString = (str: string) => {
-      let hash = 0;
-      for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      return Math.abs(hash);
-    };
-
     return {
       id: group.id,
       name: group.name,
@@ -306,7 +286,7 @@ export class GroupsService {
           id: m.userId,
           name: m.user.name,
           initial: m.user.name.charAt(0).toUpperCase(),
-          color: colors[hash % colors.length],
+          color: COLORS[hash % COLORS.length],
           avatarUrl: m.user.avatarUrl,
         };
       }),

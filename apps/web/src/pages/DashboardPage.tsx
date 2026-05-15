@@ -157,6 +157,9 @@ function GroupCard({ group, delay }: { group: GroupData; delay: string }) {
                 key={i}
                 className="clay-avatar size-8 border-2 border-white"
               >
+                {member.avatarUrl && (
+                  <AvatarImage src={member.avatarUrl} alt={member.name} referrerPolicy="no-referrer" />
+                )}
                 <AvatarFallback
                   className="text-xs font-bold text-white"
                   style={{ backgroundColor: member.color }}
