@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -171,6 +171,9 @@ export default function GroupDetailsPage() {
                 key={member.id}
                 className="clay-avatar size-10 border-2 border-white ring-2 ring-background"
               >
+                {member.avatarUrl && (
+                  <AvatarImage src={member.avatarUrl} alt={member.name} referrerPolicy="no-referrer" />
+                )}
                 <AvatarFallback
                   className="font-bold text-white text-sm"
                   style={{ backgroundColor: member.color }}
@@ -215,31 +218,28 @@ export default function GroupDetailsPage() {
         <div className="flex bg-soft-clay p-1 rounded-2xl mb-6 shadow-inner">
           <button
             onClick={() => setActiveTab("feed")}
-            className={`flex-1 py-2.5 rounded-xl font-display font-bold text-sm transition-all ${
-              activeTab === "feed"
+            className={`flex-1 py-2.5 rounded-xl font-display font-bold text-sm transition-all ${activeTab === "feed"
                 ? "bg-white text-foreground shadow-sm scale-100"
                 : "text-muted-foreground hover:text-foreground scale-95"
-            }`}
+              }`}
           >
             Expense Feed
           </button>
           <button
             onClick={() => setActiveTab("balances")}
-            className={`flex-1 py-2.5 rounded-xl font-display font-bold text-sm transition-all ${
-              activeTab === "balances"
+            className={`flex-1 py-2.5 rounded-xl font-display font-bold text-sm transition-all ${activeTab === "balances"
                 ? "bg-white text-foreground shadow-sm scale-100"
                 : "text-muted-foreground hover:text-foreground scale-95"
-            }`}
+              }`}
           >
             Balances & Settlement
           </button>
           <button
             onClick={() => setActiveTab("activity")}
-            className={`flex-1 py-2.5 rounded-xl font-display font-bold text-sm transition-all ${
-              activeTab === "activity"
+            className={`flex-1 py-2.5 rounded-xl font-display font-bold text-sm transition-all ${activeTab === "activity"
                 ? "bg-white text-foreground shadow-sm scale-100"
                 : "text-muted-foreground hover:text-foreground scale-95"
-            }`}
+              }`}
           >
             Activity
           </button>

@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 import { useGroups, useCreateGroup, useJoinGroup } from "@/hooks/useGroups";
 import type { GroupData } from "@/hooks/useGroups";
+import { useLogout, useUserProfile } from "@/hooks/useUser";
 
 const CATEGORIES = [
   { label: "Travel", value: "TRIP" },
@@ -90,10 +91,10 @@ function StatCard({
         </p>
         <p
           className={`text-2xl font-bold font-sans mt-1 ${variant === "green"
-              ? "clay-stat-green"
-              : variant === "red"
-                ? "clay-stat-red"
-                : "text-foreground"
+            ? "clay-stat-green"
+            : variant === "red"
+              ? "clay-stat-red"
+              : "text-foreground"
             }`}
         >
           {value}
@@ -333,13 +334,12 @@ export default function DashboardPage() {
   const [joinOpen, setJoinOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const logoutMutation = useLogout();
 
-  // Get user from localStorage (set during login)
-  const storedUser = localStorage.getItem("user");
-  const user = storedUser ? JSON.parse(storedUser) : null;
-  const userName = user?.name?.split(" ")[0] || "there";
-  const userInitials = user?.name
-    ? user.name
+  const { data: userProfile } = useUserProfile();
+  const userName = userProfile?.name?.split(" ")[0] || "there";
+  const userInitials = userProfile?.name
+    ? userProfile.name
       .split(" ")
       .map((w: string) => w[0])
       .join("")
@@ -384,7 +384,7 @@ export default function DashboardPage() {
     );
   };
 
-  const handleJoinSubmit = (e:React.FormEvent<HTMLFormElement>) => {
+  const handleJoinSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const inviteCode = formData.get("inviteCode") as string;
@@ -427,6 +427,9 @@ export default function DashboardPage() {
               className="clay-card p-0.5 rounded-full cursor-pointer hover:scale-105 transition-transform"
             >
               <Avatar className="size-9">
+                {userProfile?.avatarUrl && (
+                  <AvatarImage src={userProfile.avatarUrl} alt={userName} referrerPolicy="no-referrer" />
+                )}
                 <AvatarFallback className="bg-primary text-primary-foreground font-bold font-display text-sm">
                   {userInitials}
                 </AvatarFallback>
@@ -436,6 +439,7 @@ export default function DashboardPage() {
             <Button
               variant="ghost"
               size="icon-sm"
+              onClick={() => logoutMutation.mutate()}
               className="text-muted-foreground hover:text-coral-red"
             >
               <LogOut size={18} />
@@ -686,7 +690,7 @@ export default function DashboardPage() {
                     <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-500">
                       <AlertCircle size={18} />
                       <p className="text-sm font-medium">
-                        {(joinGroupMutation.error as {  response?: { data?: { message?: string } } })?.response?.data
+                        {(joinGroupMutation.error as { response?: { data?: { message?: string } } })?.response?.data
                           ?.message || "Failed to join group. Check the code."}
                       </p>
                     </div>

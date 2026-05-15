@@ -12,8 +12,11 @@ import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { createGroupSchema } from '@settleup/shared';
 import type { CreateGroupInput } from '@settleup/shared';
 import type { Group } from '@prisma/client';
+import { GroupRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../common/decorators/get-user.decorator';
+import { GroupRoleGuard } from './guards/group-role.guard';
+import { RequireGroupRoles } from './decorators/require-group-roles.decorator';
 
 type CreateGroupResponse = {
   message: string;
@@ -53,7 +56,8 @@ export class GroupsController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, GroupRoleGuard)
+  @RequireGroupRoles(GroupRole.OWNER, GroupRole.ADMIN, GroupRole.MEMBER)
   async getGroupById(@Param('id') id: string, @GetUser('id') userId: string) {
     const group = await this.groupsService.getGroupById(id, userId);
     return {
@@ -75,7 +79,8 @@ export class GroupsController {
   }
 
   @Get(':id/contacts')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, GroupRoleGuard)
+  @RequireGroupRoles(GroupRole.OWNER, GroupRole.ADMIN, GroupRole.MEMBER)
   async getGroupContacts(
     @Param('id') groupId: string,
     @GetUser('id') userId: string,
@@ -88,7 +93,8 @@ export class GroupsController {
   }
 
   @Post(':id/members')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, GroupRoleGuard)
+  @RequireGroupRoles(GroupRole.OWNER, GroupRole.ADMIN, GroupRole.MEMBER)
   async addMemberDirectly(
     @Param('id') groupId: string,
     @Body('userId') memberId: string,
@@ -101,7 +107,8 @@ export class GroupsController {
   }
 
   @Post(':id/members/email')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, GroupRoleGuard)
+  @RequireGroupRoles(GroupRole.OWNER, GroupRole.ADMIN, GroupRole.MEMBER)
   async addMemberByEmail(
     @Param('id') groupId: string,
     @Body('email') email: string,
@@ -114,7 +121,8 @@ export class GroupsController {
   }
 
   @Post(':id/leave')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, GroupRoleGuard)
+  @RequireGroupRoles(GroupRole.OWNER, GroupRole.ADMIN, GroupRole.MEMBER)
   async leaveGroup(
     @Param('id') groupId: string,
     @GetUser('id') userId: string,

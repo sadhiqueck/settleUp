@@ -182,7 +182,24 @@ export class GroupsService {
         OTHER: 'Other',
       };
 
-      const colors = ['#FF4B4B', '#00C700', '#FF8A00', '#00E5FF', '#8B5CF6'];
+      const colors = [
+        '#FF4B4B', // Red
+        '#00C700', // Primary Green
+        '#FF8A00', // Orange
+        '#00E5FF', // Cyan
+        '#8B5CF6', // Purple
+        '#EC4899', // Pink
+        '#14B8A6', // Teal
+        '#F59E0B', // Amber
+      ];
+
+      const hashString = (str: string) => {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+          hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return Math.abs(hash);
+      };
 
       return groupMemberships.map((membership) => {
         const g = membership.group;
@@ -207,11 +224,13 @@ export class GroupsService {
           totalExpense: totalExpense / 100, // Convert from paise/cents to standard unit
           memberCount: g.members.length,
           members: g.members.map((m) => {
-            const charCode = m.user.name.charCodeAt(0) || 0;
+            const hash = hashString(m.userId);
             return {
+              id: m.userId,
               name: m.user.name,
               initial: m.user.name.charAt(0).toUpperCase(),
-              color: colors[charCode % colors.length],
+              color: colors[hash % colors.length],
+              avatarUrl: m.user.avatarUrl,
             };
           }),
           lastActivity,
@@ -284,9 +303,11 @@ export class GroupsService {
       members: group.members.map((m) => {
         const hash = hashString(m.user.id);
         return {
+          id: m.userId,
           name: m.user.name,
           initial: m.user.name.charAt(0).toUpperCase(),
           color: colors[hash % colors.length],
+          avatarUrl: m.user.avatarUrl,
         };
       }),
       lastActivity,

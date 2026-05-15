@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Users as ClayGroupIcon, Check as ClayCheckIcon, Copy, Share2, Loader2, Plus, Mail, X, Check } from "lucide-react";
 import { toast } from "sonner";
@@ -163,6 +163,9 @@ export function InviteMemberModal({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Avatar className="size-10 border-2 border-background">
+                  {previewUser.avatarUrl && (
+                    <AvatarImage src={previewUser.avatarUrl} alt={previewUser.name} referrerPolicy="no-referrer" />
+                  )}
                   <AvatarFallback className="bg-primary/10 text-primary font-bold">
                     {previewUser.name.charAt(0).toUpperCase()}
                   </AvatarFallback>
@@ -247,6 +250,9 @@ export function InviteMemberModal({
                 >
                   <div className="flex items-center gap-3">
                     <Avatar className="size-8">
+                      {contact.avatarUrl && (
+                        <AvatarImage src={contact.avatarUrl} alt={contact.name} referrerPolicy="no-referrer" />
+                      )}
                       <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
                         {contact.name.charAt(0).toUpperCase()}
                       </AvatarFallback>

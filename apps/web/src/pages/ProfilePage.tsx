@@ -21,7 +21,7 @@ import {
   Settings,
   User as UserIcon,
 } from "lucide-react";
-import { useUpdateProfile, useUserProfile } from "@/hooks/useUser";
+import { useUpdateProfile, useUserProfile, useLogout } from "@/hooks/useUser";
 // import { ClayShieldIcon } from "@/components/clay-icons";
 
 export default function ProfilePage() {
@@ -34,6 +34,7 @@ export default function ProfilePage() {
   const { data: user, isLoading } = useUserProfile();
 
   const updateProfileMutation = useUpdateProfile();
+  const logoutMutation = useLogout();
 
   if (user && !isInitialized) {
     setName(user.name || "");
@@ -100,11 +101,15 @@ export default function ProfilePage() {
           />
 
           <div className="clay-avatar size-24 border-4 border-white mb-4 relative z-10">
-            <div className="w-full h-full rounded-full bg-primary flex items-center justify-center">
-              <span className="font-display font-bold text-3xl text-primary-foreground">
-                {getInitials(user?.name || "")}
-              </span>
-            </div>
+            {user?.avatarUrl ? (
+              <img src={user.avatarUrl} alt={name} className="w-full h-full rounded-full object-cover" referrerPolicy="no-referrer" />
+            ) : (
+              <div className="w-full h-full rounded-full bg-primary flex items-center justify-center">
+                <span className="font-display font-bold text-3xl text-primary-foreground">
+                  {getInitials(user?.name || "")}
+                </span>
+              </div>
+            )}
             {/* Edit Badge */}
             <button className="clay-card absolute bottom-0 right-0 p-1.5 rounded-full hover:scale-110 transition-transform">
               <UserIcon size={14} className="text-muted-foreground" />
@@ -195,7 +200,7 @@ export default function ProfilePage() {
             </Card>
 
             <button
-              onClick={() => navigate("/login")}
+              onClick={() => logoutMutation.mutate()}
               className="w-full clay-card-elevated p-5 flex justify-center items-center gap-2 font-display font-bold text-destructive hover:scale-[1.01] transition-transform cursor-pointer"
             >
               <LogOut size={18} /> Log Out

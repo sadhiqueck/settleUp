@@ -387,7 +387,8 @@ export default function AuthPage() {
                     <button
                       type="button"
                       disabled={isLoading}
-                      className="clay-card border-0 font-semibold px-6 py-3 w-full flex items-center justify-center gap-3 text-[#3c4043] hover:bg-muted/50 transition-colors"
+                      onClick={() => window.location.href = `${API_URL}/auth/google`}
+                      className="clay-card border-0 font-semibold px-6 py-3 w-full flex items-center justify-center gap-3 text-[#3c4043] hover:bg-muted/50 transition-colors cursor-pointer"
                     >
                       <ClayGoogleIcon size={20} />
                       <span className="font-display font-semibold">
@@ -549,7 +550,8 @@ export default function AuthPage() {
                     <button
                       type="button"
                       disabled={isLoading}
-                      className="clay-card border-0 font-semibold px-6 py-3 w-full flex items-center justify-center gap-3 text-[#3c4043] hover:bg-muted/50 transition-colors"
+                      onClick={() => window.location.href = `${API_URL}/auth/google`}
+                      className="clay-card border-0 font-semibold px-6 py-3 w-full flex items-center justify-center gap-3 text-[#3c4043] hover:bg-muted/50 transition-colors cursor-pointer"
                     >
                       <ClayGoogleIcon size={20} />
                       <span className="font-display font-semibold">

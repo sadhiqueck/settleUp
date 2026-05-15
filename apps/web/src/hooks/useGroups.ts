@@ -8,6 +8,7 @@ export interface GroupMember {
   name: string;
   initial: string;
   color: string;
+  avatarUrl?: string | null;
 }
 
 export interface GroupData {
