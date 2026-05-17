@@ -1,7 +1,12 @@
-import { Injectable, InternalServerErrorException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import type { CreateExpenseInput, UpdateExpenseInput } from '@settleup/shared';
-import { ActivityType } from '@prisma/client';
+import { ActivityType, ExpenseCategory, SplitMethod } from '@prisma/client';
 
 @Injectable()
 export class ExpensesService {
@@ -27,8 +32,8 @@ export class ExpensesService {
             amount: data.amount,
             paidById: data.paidById,
             groupId: groupId,
-            category: data.category as any, // Cast to Prisma enum if needed
-            splitMethod: data.splitMethod as any,
+            category: data.category as ExpenseCategory,
+            splitMethod: data.splitMethod as SplitMethod,
             date: new Date(data.date),
             notes: data.notes,
             receiptUrl: data.receiptUrl,
@@ -57,7 +62,11 @@ export class ExpensesService {
             const amountOwedToPayer = data.amount - split.amount;
             await tx.groupMemberBalance.upsert({
               where: { groupId_userId: { groupId, userId: split.userId } },
-              create: { groupId, userId: split.userId, balance: amountOwedToPayer },
+              create: {
+                groupId,
+                userId: split.userId,
+                balance: amountOwedToPayer,
+              },
               update: { balance: { increment: amountOwedToPayer } },
             });
           } else {
@@ -94,13 +103,15 @@ export class ExpensesService {
   }
 
   async updateExpense(expenseId: string, data: UpdateExpenseInput) {
-    // Updating an expense is extremely complex in a split-payment system 
+    // Updating an expense is extremely complex in a split-payment system
     // because you have to reverse the old balances and apply the new ones.
     // For now, we will update the basic metadata of the expense.
-    
+
     // TODO: Implement full balance-reversal and recalculation if amount or splits change
     if (data.amount || data.splits) {
-      throw new BadRequestException('Updating expense amount or splits is not fully supported yet. Please delete and recreate the expense.');
+      throw new BadRequestException(
+        'Updating expense amount or splits is not fully supported yet. Please delete and recreate the expense.',
+      );
     }
 
     try {
@@ -108,7 +119,7 @@ export class ExpensesService {
         where: { id: expenseId },
         data: {
           title: data.title,
-          category: data.category as any,
+          category: data.category as ExpenseCategory,
           date: data.date ? new Date(data.date) : undefined,
           notes: data.notes,
           receiptUrl: data.receiptUrl,
@@ -116,7 +127,9 @@ export class ExpensesService {
       });
     } catch (error) {
       console.error('Error updating expense:', error);
-      throw new InternalServerErrorException('Failed to update expense metadata');
+      throw new InternalServerErrorException(
+        'Failed to update expense metadata',
+      );
     }
   }
 
@@ -138,13 +151,23 @@ export class ExpensesService {
             // Reverse Payer
             const amountOwedToPayer = expense.amount - split.amount;
             await tx.groupMemberBalance.update({
-              where: { groupId_userId: { groupId: expense.groupId, userId: split.userId } },
+              where: {
+                groupId_userId: {
+                  groupId: expense.groupId,
+                  userId: split.userId,
+                },
+              },
               data: { balance: { decrement: amountOwedToPayer } },
             });
           } else {
             // Reverse Borrower
             await tx.groupMemberBalance.update({
-              where: { groupId_userId: { groupId: expense.groupId, userId: split.userId } },
+              where: {
+                groupId_userId: {
+                  groupId: expense.groupId,
+                  userId: split.userId,
+                },
+              },
               data: { balance: { increment: split.amount } },
             });
           }

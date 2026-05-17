@@ -32,6 +32,15 @@ const COLORS = [
   '#F59E0B', // Amber
 ];
 
+const categoryMap: Record<string, string> = {
+  TRIP: 'Travel',
+  HOME: 'Home',
+  OFFICE: 'Work',
+  ROOMMATES: 'Home',
+  FRIENDS: 'Other',
+  OTHER: 'Other',
+};
+
 const hashString = (str: string) => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -179,14 +188,6 @@ export class GroupsService {
         orderBy: { joinedAt: 'desc' },
       });
 
-      const categoryMap: Record<string, string> = {
-        TRIP: 'Travel',
-        HOME: 'Home',
-        OFFICE: 'Work',
-        ROOMMATES: 'Home',
-        FRIENDS: 'Other',
-        OTHER: 'Other',
-      };
       return groupMemberships.map((membership) => {
         const g = membership.group;
         const totalExpense = g.expenses.reduce(

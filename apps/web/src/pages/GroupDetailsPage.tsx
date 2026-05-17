@@ -56,6 +56,7 @@ export default function GroupDetailsPage() {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const { data: group, isLoading, error } = useGroup(id);
   const leaveGroupMutation = useLeaveGroup();
+  
 
   if (isLoading) {
     return (
@@ -557,7 +558,7 @@ export default function GroupDetailsPage() {
                 <span className="text-sm text-muted-foreground">
                   Split Type
                 </span>
-                <Badge className="clay-badge-neutral text-[10px] items-center">
+                <Badge className="clay-badge text-[10px] items-center">
                   EQUAL SPLIT
                 </Badge>
               </div>
