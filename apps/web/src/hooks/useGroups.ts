@@ -33,8 +33,13 @@ export interface GroupExpense {
   title: string;
   amount: number;
   category: string;
+  splitMethod: string;
   paidBy: string;
+  paidById: string;
+  paidByAvatar?: string | null;
   date: string;
+  notes?: string | null;
+  splitCount: number;
 }
 
 export interface GroupBalance {

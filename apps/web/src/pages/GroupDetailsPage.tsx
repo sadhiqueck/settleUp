@@ -1,19 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   ClayGroupIcon,
   ClayReceiptIcon,
@@ -26,17 +15,19 @@ import {
 import {
   ArrowLeft,
   Clock,
-  ShoppingCart,
   User as UserIcon,
-  /*Calendar*/ Info,
+  Info,
   Loader2,
   Plus,
   LogOut,
+  Users,
 } from "lucide-react";
+import type { GroupExpense } from "@/hooks/useGroups";
 import { useGroup, useLeaveGroup } from "@/hooks/useGroups";
 import type { AxiosError } from "axios";
 import { toast } from "sonner";
 import { InviteMemberModal } from "@/components/groups/InviteMemberModal";
+import { AddExpenseModal } from "@/components/groups/AddExpenseModal";
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-IN", {
@@ -44,6 +35,168 @@ function formatCurrency(amount: number): string {
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(Math.abs(amount));
+}
+
+const CATEGORY_CONFIG: Record<string, { emoji: string; bg: string; label: string }> = {
+  FOOD: { emoji: "🍕", bg: "bg-orange-50", label: "Food" },
+  TRANSPORT: { emoji: "🚕", bg: "bg-blue-50", label: "Transport" },
+  ACCOMMODATION: { emoji: "🏨", bg: "bg-purple-50", label: "Stay" },
+  SHOPPING: { emoji: "🛍️", bg: "bg-pink-50", label: "Shopping" },
+  ENTERTAINMENT: { emoji: "🎬", bg: "bg-yellow-50", label: "Fun" },
+  UTILITIES: { emoji: "💡", bg: "bg-teal-50", label: "Utilities" },
+  RENT: { emoji: "🏠", bg: "bg-indigo-50", label: "Rent" },
+  OTHER: { emoji: "📦", bg: "bg-gray-50", label: "Other" },
+};
+
+function formatRelativeDate(isoDate: string): string {
+  const date = new Date(isoDate);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHrs = Math.floor(diffMins / 60);
+  if (diffHrs < 24) return `${diffHrs}h ago`;
+  const diffDays = Math.floor(diffHrs / 24);
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return new Intl.DateTimeFormat("en-IN", { month: "short", day: "numeric" }).format(date);
+}
+
+function groupExpensesByDate(expenses: GroupExpense[]): { label: string; expenses: GroupExpense[] }[] {
+  const groups: Map<string, GroupExpense[]> = new Map();
+  const today = new Date();
+  for (const exp of expenses) {
+    const d = new Date(exp.date);
+    const isToday = d.toDateString() === today.toDateString();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const isYesterday = d.toDateString() === yesterday.toDateString();
+    const label = isToday
+      ? "Today"
+      : isYesterday
+        ? "Yesterday"
+        : new Intl.DateTimeFormat("en-IN", { month: "long", day: "numeric", year: "numeric" }).format(d);
+    if (!groups.has(label)) groups.set(label, []);
+    groups.get(label)!.push(exp);
+  }
+  return Array.from(groups.entries()).map(([label, expenses]) => ({ label, expenses }));
+}
+
+/* ── Expense Feed Component ── */
+function ExpenseFeed({
+  expenses,
+  onAddExpense,
+}: {
+  expenses: GroupExpense[];
+  onAddExpense: () => void;
+}) {
+  const dateGroups = useMemo(() => groupExpensesByDate(expenses ?? []), [expenses]);
+
+  if (!expenses || expenses.length === 0) {
+    return (
+      <div className="clay-card p-12 flex flex-col items-center justify-center text-center animate-clay-fade-up">
+        <div className="clay-card p-4 mb-4 bg-soft-clay">
+          <ClayReceiptIcon size={40} className="text-muted-foreground opacity-50" />
+        </div>
+        <h3 className="font-display font-bold text-lg mb-1">No expenses yet</h3>
+        <p className="text-sm text-muted-foreground max-w-[220px] mx-auto">
+          Start by adding your first expense to the group!
+        </p>
+        <Button onClick={onAddExpense} className="clay-btn-primary mt-6 px-8 h-11 text-xs">
+          Add First Expense
+        </Button>
+      </div>
+    );
+  }
+
+  let itemIndex = 0;
+
+  return (
+    <div className="space-y-6">
+      {dateGroups.map((group) => (
+        <div key={group.label}>
+          {/* Date Header */}
+          <div className="flex items-center gap-3 mb-3">
+            <span className="font-display font-extrabold text-xs uppercase tracking-widest text-muted-foreground">
+              {group.label}
+            </span>
+            <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent" />
+          </div>
+
+          {/* Expense Cards */}
+          <div className="space-y-3">
+            {group.expenses.map((expense) => {
+              const cat = CATEGORY_CONFIG[expense.category] ?? CATEGORY_CONFIG.OTHER;
+              const delay = Math.min(itemIndex++ * 0.05, 0.4);
+              return (
+                <div
+                  key={expense.id}
+                  className="clay-card p-0 overflow-hidden group cursor-pointer animate-clay-fade-up"
+                  style={{ opacity: 0, animationDelay: `${delay}s` }}
+                >
+                  <div className="flex items-center gap-4 p-4 sm:p-5">
+                    {/* Category Icon */}
+                    <div
+                      className={`size-12 rounded-2xl ${cat.bg} flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform duration-300`}
+                    >
+                      <span className="text-xl">{cat.emoji}</span>
+                    </div>
+
+                    {/* Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-display font-bold text-[15px] truncate">
+                          {expense.title}
+                        </h4>
+                        <Badge className="clay-badge clay-badge-neutral text-[10px] px-2 py-0 shrink-0 hidden sm:inline-flex">
+                          {cat.label}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5 mt-1">
+                        <span className="font-semibold text-foreground">
+                          {expense.paidBy}
+                        </span>{" "}
+                        paid
+                        <span className="text-border">•</span>
+                        <Clock size={10} className="opacity-60" />
+                        <span>{formatRelativeDate(expense.date)}</span>
+                        {expense.splitCount > 1 && (
+                          <>
+                            <span className="text-border">•</span>
+                            <Users size={10} className="opacity-60" />
+                            <span>Split {expense.splitCount}</span>
+                          </>
+                        )}
+                      </p>
+                    </div>
+
+                    {/* Amount */}
+                    <div className="text-right shrink-0 pl-2">
+                      <p className="font-sans font-bold text-lg tracking-tight">
+                        {formatCurrency(expense.amount)}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">
+                        {expense.splitMethod === "EQUAL" ? "Equal" : expense.splitMethod.toLowerCase()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+      {/* End of feed */}
+      <div className="py-6 flex flex-col items-center justify-center">
+        <div className="w-8 h-1 rounded-full bg-border mb-3 opacity-40" />
+        <p className="text-xs font-medium text-muted-foreground opacity-50">
+          You've reached the beginning
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export default function GroupDetailsPage() {
@@ -56,7 +209,6 @@ export default function GroupDetailsPage() {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const { data: group, isLoading, error } = useGroup(id);
   const leaveGroupMutation = useLeaveGroup();
-  
 
   if (isLoading) {
     return (
@@ -268,78 +420,10 @@ export default function GroupDetailsPage() {
           style={{ opacity: 0, animationDelay: "0.1s" }}
         >
           {activeTab === "feed" ? (
-            <div className="space-y-4">
-              {!group.expenses || group.expenses.length === 0 ? (
-                <div className="clay-card p-12 flex flex-col items-center justify-center text-center animate-clay-fade-up">
-                  <div className="clay-card p-4 mb-4 bg-soft-clay">
-                    <ClayReceiptIcon
-                      size={40}
-                      className="text-muted-foreground opacity-50"
-                    />
-                  </div>
-                  <h3 className="font-display font-bold text-lg mb-1">
-                    No expenses yet
-                  </h3>
-                  <p className="text-sm text-muted-foreground max-w-50 mx-auto">
-                    Start by adding your first expense to the group!
-                  </p>
-                  <Button
-                    onClick={() => setIsAddExpenseOpen(true)}
-                    className="clay-btn-primary mt-6 px-8 h-11 text-xs"
-                  >
-                    Add First Expense
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  {group.expenses.map((expense) => (
-                    <div
-                      key={expense.id}
-                      className="clay-card p-5 flex items-center justify-between group cursor-pointer"
-                    >
-                      <div className="flex items-center gap-4 min-w-0">
-                        <div className="size-12 rounded-2xl bg-soft-clay flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform">
-                          {expense.category === "Food" ? (
-                            <ShoppingCart size={20} className="text-primary" />
-                          ) : expense.category === "Transport" ? (
-                            <span className="text-xl">🛵</span>
-                          ) : (
-                            <span className="text-xl">🏠</span>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="font-display font-bold text-base truncate">
-                            {expense.title}
-                          </h4>
-                          <p className="text-xs text-muted-foreground font-medium flex items-center gap-1.5 mt-0.5">
-                            <span className="font-semibold text-foreground">
-                              {expense.paidBy === "You"
-                                ? "You"
-                                : expense.paidBy}
-                            </span>{" "}
-                            paid •{" "}
-                            <span className="flex items-center gap-0.5">
-                              <Clock size={10} /> {expense.date}
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="font-sans font-bold text-lg">
-                          {formatCurrency(expense.amount)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-
-                  <div className="py-8 flex flex-col items-center justify-center opacity-60">
-                    <p className="text-sm font-medium text-muted-foreground">
-                      You've reached the beginning.
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
+            <ExpenseFeed
+              expenses={group.expenses}
+              onAddExpense={() => setIsAddExpenseOpen(true)}
+            />
           ) : activeTab === "balances" ? (
             <div className="space-y-8">
               {/* Balances */}
@@ -449,7 +533,7 @@ export default function GroupDetailsPage() {
                       )}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                      <Clock size={10} /> {item.timestamp}
+                      <Clock size={10} /> {formatRelativeDate(item.timestamp)}
                     </p>
                   </div>
                 </div>
@@ -473,128 +557,13 @@ export default function GroupDetailsPage() {
       </div>
 
       {/* ── Add Expense Modal ── */}
-      <Dialog open={isAddExpenseOpen} onOpenChange={setIsAddExpenseOpen}>
-        <DialogContent className="clay-card-elevated border-0 ring-0 rounded-3xl max-w-md">
-          <DialogHeader className="pb-2">
-            <div className="flex items-center gap-3">
-              <div className="clay-card p-2">
-                <ClayReceiptIcon size={28} />
-              </div>
-              <div>
-                <DialogTitle className="font-display text-lg font-bold">
-                  Add an Expense
-                </DialogTitle>
-                <DialogDescription className="text-sm">
-                  Log a new purchase for {group.name}.
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              setIsAddExpenseOpen(false);
-            }}
-            className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto px-1 pb-2"
-          >
-            <div className="flex flex-col gap-2">
-              <Label
-                htmlFor="expense-title"
-                className="font-display font-bold text-sm"
-              >
-                What was this for?
-              </Label>
-              <Input
-                id="expense-title"
-                placeholder="e.g. Dinner"
-                className="clay-input"
-                required
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label
-                htmlFor="expense-amount"
-                className="font-display font-bold text-sm"
-              >
-                Amount
-              </Label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">
-                  ₹
-                </span>
-                <Input
-                  id="expense-amount"
-                  type="number"
-                  placeholder="0"
-                  className="clay-input pl-9"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label
-                htmlFor="expense-category"
-                className="font-display font-bold text-sm"
-              >
-                Category
-              </Label>
-              <select
-                id="expense-category"
-                className="clay-input text-sm cursor-pointer border-r-8 border-transparent"
-              >
-                <option value="Food">Food & Dining</option>
-                <option value="Transport">Transport</option>
-                <option value="Home">Home & Airbnb</option>
-                <option value="General">General Expense</option>
-              </select>
-            </div>
-
-            <div className="bg-soft-clay rounded-2xl p-4 mt-2 mb-2">
-              <p className="text-sm font-semibold mb-2">Split Details</p>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Split Type
-                </span>
-                <Badge className="clay-badge text-[10px] items-center">
-                  EQUAL SPLIT
-                </Badge>
-              </div>
-              <Separator className="clay-divider my-3" />
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="participating"
-                  defaultChecked
-                  className="size-4 accent-primary rounded-md"
-                />
-                <label htmlFor="participating" className="text-sm font-medium">
-                  Split equally between all 5 members
-                </label>
-              </div>
-            </div>
-
-            <DialogFooter className="mt-2 border-none">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setIsAddExpenseOpen(false)}
-                className="clay-btn-ghost font-display"
-              >
-                Cancel
-              </Button>
-              <button
-                type="submit"
-                className="clay-btn-primary px-6 py-2.5 text-sm font-display shadow-lg"
-              >
-                Log Expense
-              </button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <AddExpenseModal
+        isOpen={isAddExpenseOpen}
+        onClose={() => setIsAddExpenseOpen(false)}
+        groupId={group.id}
+        groupName={group.name}
+        members={group.members}
+      />
 
       {/* ── Invite Member Modal ── */}
       <InviteMemberModal

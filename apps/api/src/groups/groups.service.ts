@@ -239,15 +239,24 @@ export class GroupsService {
           include: { user: true },
         },
         balances: {
-          where: { userId },
+          include: { user: true },
         },
         expenses: {
           where: { isDeleted: false },
-          select: { amount: true },
+          include: {
+            paidBy: { select: { id: true, name: true, avatarUrl: true } },
+            splits: {
+              include: {
+                user: { select: { id: true, name: true } },
+              },
+            },
+          },
+          orderBy: { date: 'desc' },
         },
         activities: {
+          include: { user: { select: { id: true, name: true } } },
           orderBy: { createdAt: 'desc' },
-          take: 1,
+          take: 30,
         },
       },
     });
@@ -260,24 +269,77 @@ export class GroupsService {
       (sum, exp) => sum + exp.amount,
       0,
     );
-    const userBalance =
-      group.balances.length > 0 ? group.balances[0].balance : 0;
+    const userBalanceRecord = group.balances.find((b) => b.userId === userId);
+    const userBalance = userBalanceRecord ? userBalanceRecord.balance : 0;
     const lastActivityDate =
       group.activities.length > 0
         ? group.activities[0].createdAt
         : group.updatedAt;
 
-    // Format relative time or simple date
     const lastActivity = new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric',
     }).format(new Date(lastActivityDate));
 
+    // Build member name lookup
+    const memberNameMap = new Map<string, string>();
+    group.members.forEach((m) => memberNameMap.set(m.userId, m.user.name));
+
+    // --- Expenses ---
+    const expenses = group.expenses.map((exp) => ({
+      id: exp.id,
+      title: exp.title,
+      amount: exp.amount / 100,
+      category: exp.category,
+      splitMethod: exp.splitMethod,
+      paidBy: exp.paidBy.id === userId ? 'You' : exp.paidBy.name,
+      paidById: exp.paidBy.id,
+      paidByAvatar: exp.paidBy.avatarUrl,
+      date: exp.date.toISOString(),
+      notes: exp.notes,
+      splitCount: exp.splits.length,
+    }));
+
+    // --- Balances (all members) ---
+    const balances = group.balances.map((b) => ({
+      memberId: b.userId,
+      name: b.userId === userId ? 'You' : (memberNameMap.get(b.userId) ?? 'Unknown'),
+      balance: b.balance / 100,
+    }));
+
+    // --- Settlement suggestions (greedy algorithm) ---
+    const settlements = this.calculateSettlements(group.balances, memberNameMap, userId);
+
+    // --- Activity feed ---
+    const activityTypeMap: Record<string, string> = {
+      EXPENSE_ADDED: 'expense',
+      EXPENSE_UPDATED: 'expense',
+      EXPENSE_DELETED: 'expense',
+      SETTLEMENT_CREATED: 'settlement',
+      SETTLEMENT_CONFIRMED: 'settlement',
+      SETTLEMENT_REJECTED: 'settlement',
+      MEMBER_JOINED: 'info',
+      MEMBER_LEFT: 'info',
+      GROUP_UPDATED: 'info',
+    };
+
+    const activity = group.activities.map((act) => {
+      const meta = act.metadata as Record<string, unknown> | null;
+      return {
+        id: act.id,
+        type: activityTypeMap[act.type] || 'info',
+        user: act.userId === userId ? 'You' : act.user.name,
+        action: (meta?.action as string) || act.type,
+        target: (meta?.expenseTitle as string) || undefined,
+        timestamp: act.createdAt.toISOString(),
+      };
+    });
+
     return {
       id: group.id,
       name: group.name,
-      category: group.category,
-      totalExpense: totalExpense / 100, // Convert from paise/cents to standard unit
+      category: categoryMap[group.category] || 'Other',
+      totalExpense: totalExpense / 100,
       memberCount: group.members.length,
       members: group.members.map((m) => {
         const hash = hashString(m.user.id);
@@ -292,7 +354,57 @@ export class GroupsService {
       lastActivity,
       userBalance: userBalance / 100,
       inviteCode: group.inviteCode,
+      expenses,
+      balances,
+      settlements,
+      activity,
     };
+  }
+
+  /**
+   * Greedy settlement minimization: pair up largest debtor with largest creditor
+   * to minimize the number of transactions needed to settle all debts.
+   */
+  private calculateSettlements(
+    balances: { userId: string; balance: number }[],
+    nameMap: Map<string, string>,
+    currentUserId: string,
+  ) {
+    const debtors: { userId: string; amount: number }[] = [];
+    const creditors: { userId: string; amount: number }[] = [];
+
+    for (const b of balances) {
+      if (b.balance < 0) debtors.push({ userId: b.userId, amount: -b.balance });
+      else if (b.balance > 0) creditors.push({ userId: b.userId, amount: b.balance });
+    }
+
+    debtors.sort((a, b) => b.amount - a.amount);
+    creditors.sort((a, b) => b.amount - a.amount);
+
+    const settlements: { from: string; to: string; amount: number }[] = [];
+    let i = 0;
+    let j = 0;
+
+    while (i < debtors.length && j < creditors.length) {
+      const transfer = Math.min(debtors[i].amount, creditors[j].amount);
+      if (transfer > 0) {
+        const fromName =
+          debtors[i].userId === currentUserId
+            ? 'You'
+            : (nameMap.get(debtors[i].userId) ?? 'Unknown');
+        const toName =
+          creditors[j].userId === currentUserId
+            ? 'You'
+            : (nameMap.get(creditors[j].userId) ?? 'Unknown');
+        settlements.push({ from: fromName, to: toName, amount: transfer / 100 });
+      }
+      debtors[i].amount -= transfer;
+      creditors[j].amount -= transfer;
+      if (debtors[i].amount === 0) i++;
+      if (creditors[j].amount === 0) j++;
+    }
+
+    return settlements;
   }
 
   private async internalAddMemberToGroup(
