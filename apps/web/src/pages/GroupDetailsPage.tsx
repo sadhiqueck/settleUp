@@ -37,7 +37,10 @@ function formatCurrency(amount: number): string {
   }).format(Math.abs(amount));
 }
 
-const CATEGORY_CONFIG: Record<string, { emoji: string; bg: string; label: string }> = {
+const CATEGORY_CONFIG: Record<
+  string,
+  { emoji: string; bg: string; label: string }
+> = {
   FOOD: { emoji: "🍕", bg: "bg-orange-50", label: "Food" },
   TRANSPORT: { emoji: "🚕", bg: "bg-blue-50", label: "Transport" },
   ACCOMMODATION: { emoji: "🏨", bg: "bg-purple-50", label: "Stay" },
@@ -60,10 +63,15 @@ function formatRelativeDate(isoDate: string): string {
   const diffDays = Math.floor(diffHrs / 24);
   if (diffDays === 1) return "Yesterday";
   if (diffDays < 7) return `${diffDays}d ago`;
-  return new Intl.DateTimeFormat("en-IN", { month: "short", day: "numeric" }).format(date);
+  return new Intl.DateTimeFormat("en-IN", {
+    month: "short",
+    day: "numeric",
+  }).format(date);
 }
 
-function groupExpensesByDate(expenses: GroupExpense[]): { label: string; expenses: GroupExpense[] }[] {
+function groupExpensesByDate(
+  expenses: GroupExpense[],
+): { label: string; expenses: GroupExpense[] }[] {
   const groups: Map<string, GroupExpense[]> = new Map();
   const today = new Date();
   for (const exp of expenses) {
@@ -76,11 +84,18 @@ function groupExpensesByDate(expenses: GroupExpense[]): { label: string; expense
       ? "Today"
       : isYesterday
         ? "Yesterday"
-        : new Intl.DateTimeFormat("en-IN", { month: "long", day: "numeric", year: "numeric" }).format(d);
+        : new Intl.DateTimeFormat("en-IN", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          }).format(d);
     if (!groups.has(label)) groups.set(label, []);
     groups.get(label)!.push(exp);
   }
-  return Array.from(groups.entries()).map(([label, expenses]) => ({ label, expenses }));
+  return Array.from(groups.entries()).map(([label, expenses]) => ({
+    label,
+    expenses,
+  }));
 }
 
 /* ── Expense Feed Component ── */
@@ -91,19 +106,28 @@ function ExpenseFeed({
   expenses: GroupExpense[];
   onAddExpense: () => void;
 }) {
-  const dateGroups = useMemo(() => groupExpensesByDate(expenses ?? []), [expenses]);
+  const dateGroups = useMemo(
+    () => groupExpensesByDate(expenses ?? []),
+    [expenses],
+  );
 
   if (!expenses || expenses.length === 0) {
     return (
       <div className="clay-card p-12 flex flex-col items-center justify-center text-center animate-clay-fade-up">
         <div className="clay-card p-4 mb-4 bg-soft-clay">
-          <ClayReceiptIcon size={40} className="text-muted-foreground opacity-50" />
+          <ClayReceiptIcon
+            size={40}
+            className="text-muted-foreground opacity-50"
+          />
         </div>
         <h3 className="font-display font-bold text-lg mb-1">No expenses yet</h3>
-        <p className="text-sm text-muted-foreground max-w-[220px] mx-auto">
+        <p className="text-sm text-muted-foreground max-w-55 mx-auto">
           Start by adding your first expense to the group!
         </p>
-        <Button onClick={onAddExpense} className="clay-btn-primary mt-6 px-8 h-11 text-xs">
+        <Button
+          onClick={onAddExpense}
+          className="clay-btn-primary mt-6 px-8 h-11 text-xs"
+        >
           Add First Expense
         </Button>
       </div>
@@ -121,13 +145,14 @@ function ExpenseFeed({
             <span className="font-display font-extrabold text-xs uppercase tracking-widest text-muted-foreground">
               {group.label}
             </span>
-            <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent" />
+            <div className="flex-1 h-px bg-linear-to-r from-border to-transparent" />
           </div>
 
           {/* Expense Cards */}
           <div className="space-y-3">
             {group.expenses.map((expense) => {
-              const cat = CATEGORY_CONFIG[expense.category] ?? CATEGORY_CONFIG.OTHER;
+              const cat =
+                CATEGORY_CONFIG[expense.category] ?? CATEGORY_CONFIG.OTHER;
               const delay = Math.min(itemIndex++ * 0.05, 0.4);
               return (
                 <div
@@ -177,7 +202,9 @@ function ExpenseFeed({
                         {formatCurrency(expense.amount)}
                       </p>
                       <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">
-                        {expense.splitMethod === "EQUAL" ? "Equal" : expense.splitMethod.toLowerCase()}
+                        {expense.splitMethod === "EQUAL"
+                          ? "Equal"
+                          : expense.splitMethod.toLowerCase()}
                       </p>
                     </div>
                   </div>
@@ -208,6 +235,7 @@ export default function GroupDetailsPage() {
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const { data: group, isLoading, error } = useGroup(id);
+  console.log(group);
   const leaveGroupMutation = useLeaveGroup();
 
   if (isLoading) {
@@ -558,6 +586,7 @@ export default function GroupDetailsPage() {
 
       {/* ── Add Expense Modal ── */}
       <AddExpenseModal
+        key={isAddExpenseOpen ? "open" : "closed"}
         isOpen={isAddExpenseOpen}
         onClose={() => setIsAddExpenseOpen(false)}
         groupId={group.id}

@@ -1,10 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createExpenseSchema, type CreateExpenseInput } from "@settleup/shared";
 import type { z } from "zod";
 
+type Item = {
+  id: string;
+  name: string;
+  price: number;
+  assignedTo: string[];
+};
+
 type ExpenseFormValues = z.input<typeof createExpenseSchema>;
+
 import {
   Dialog,
   DialogContent,
@@ -18,11 +26,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ClayReceiptIcon } from "@/components/clay-icons";
-import { Loader2 } from "lucide-react";
+import { Loader2, Check, Users } from "lucide-react";
 import { useAddExpense } from "@/hooks/useExpense";
 import { useUserProfile } from "@/hooks/useUser";
 import type { GroupMember } from "@/hooks/useGroups";
+
+/* ─── Helpers ─── */
+
+function formatSplitAmount(amount: number): string {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+/* ─── Component ─── */
 
 interface AddExpenseModalProps {
   isOpen: boolean;
@@ -54,7 +75,7 @@ export function AddExpenseModal({
     defaultValues: {
       title: "",
       amount: 0,
-      paidById: "", // Will set when user loads
+      paidById: user?.id ?? "",
       category: "OTHER",
       splitMethod: "EQUAL",
       date: new Date().toISOString(),
@@ -62,48 +83,239 @@ export function AddExpenseModal({
     },
   });
 
+  const hasSetPaidBy = useRef(false);
+
+  useEffect(() => {
+    if (user?.id && !hasSetPaidBy.current) {
+      reset((prev) => ({ ...prev, paidById: user.id }));
+      hasSetPaidBy.current = true;
+    }
+  }, [user?.id, reset]);
+
   const amount = useWatch({ control, name: "amount" }) || 0;
-  const [includeAll, setIncludeAll] = useState(true);
+  const splitMethod = useWatch({ control, name: "splitMethod" }) || "EQUAL";
 
-  // Set default paidById
-  useEffect(() => {
-    if (user?.id) {
-      setValue("paidById", user.id);
-    }
-  }, [user, setValue]);
+  // Track which members are included in the split (by member ID)
+  const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(
+    () => new Set(members.map((m) => m.id)),
+  );
 
-  // Handle equal splits calculation dynamically
-  useEffect(() => {
-    if (!members.length) return;
+  // Track values for EXACT, PERCENTAGE, SHARES, ITEMIZED
+  const [splitValues, setSplitValues] = useState<Record<string, string>>({});
 
-    if (includeAll && amount > 0) {
-      // Split amount equally
-      const splitVal = amount / members.length;
-      const splits = members.map((m) => {
-        // Adjust the first one for precision if needed, but for simplicity let's just use exact float initially
-        return {
-          userId: m.id,
-          amount: splitVal,
-        };
+  // States for ITEMIZED mode
+  const [items, setItems] = useState<Item[]>([
+    { id: Math.random().toString(36).substring(2, 9), name: "", price: 0, assignedTo: [] },
+  ]);
+  const [tax, setTax] = useState<number>(0);
+  const [tip, setTip] = useState<number>(0);
+
+  // Derived: selected members list
+  const selectedMembers = useMemo(
+    () => members.filter((m) => selectedMemberIds.has(m.id)),
+    [members, selectedMemberIds],
+  );
+
+  // Derived: per-person split amount (equal split)
+  const perPersonAmount = useMemo(() => {
+    if (selectedMembers.length === 0 || amount <= 0) return 0;
+    return amount / selectedMembers.length;
+  }, [amount, selectedMembers.length]);
+
+  // Derived calculations for other modes
+  const { totalEnteredAmount, totalPercentage, totalShares } = useMemo(() => {
+    let totalEnteredAmount = 0;
+    let totalPercentage = 0;
+    let totalShares = 0;
+    selectedMembers.forEach((m) => {
+      const val = Number(splitValues[m.id]) || 0;
+      if (splitMethod === "EXACT")
+        totalEnteredAmount += val;
+      else if (splitMethod === "PERCENTAGE") totalPercentage += val;
+      else if (splitMethod === "SHARES") totalShares += val;
+    });
+    return { totalEnteredAmount, totalPercentage, totalShares };
+  }, [selectedMembers, splitValues, splitMethod]);
+
+  // Derived calculations for ITEMIZED mode
+  const itemizedTotals = useMemo(() => {
+    const totals: Record<string, number> = {};
+    members.forEach((m) => (totals[m.id] = 0));
+
+    let subtotal = 0;
+
+    items.forEach((item) => {
+      if (item.price > 0 && item.assignedTo.length > 0) {
+        subtotal += item.price;
+        const splitAmount = item.price / item.assignedTo.length;
+        item.assignedTo.forEach((userId) => {
+          totals[userId] += splitAmount;
+        });
+      }
+    });
+
+    const extra = (tax || 0) + (tip || 0);
+    if (subtotal > 0 && extra > 0) {
+      members.forEach((m) => {
+        const share = totals[m.id] / subtotal;
+        totals[m.id] += share * extra;
       });
-      setValue("splits", splits, { shouldValidate: true });
-    } else if (includeAll && amount === 0) {
-      setValue("splits", []);
     }
-  }, [amount, includeAll, members, setValue]);
 
+    return { totals, subtotal, total: subtotal + extra };
+  }, [items, tax, tip, members]);
+
+  const isValidSplit = useMemo(() => {
+    if (splitMethod === "ITEMIZED") {
+      const hasItemizedSplit = Object.values(itemizedTotals.totals).some((v) => v > 0);
+      return hasItemizedSplit && Math.abs(itemizedTotals.total - amount) < 0.01;
+    }
+    if (selectedMembers.length === 0) return false;
+    if (splitMethod === "EQUAL") return true;
+    if (splitMethod === "EXACT") {
+      return Math.abs(totalEnteredAmount - amount) < 0.01;
+    }
+    if (splitMethod === "PERCENTAGE") {
+      return Math.abs(totalPercentage - 100) < 0.01;
+    }
+    if (splitMethod === "SHARES") {
+      return totalShares > 0;
+    }
+    return true;
+  }, [
+    splitMethod,
+    totalEnteredAmount,
+    amount,
+    totalPercentage,
+    totalShares,
+    selectedMembers.length,
+    itemizedTotals,
+  ]);
+
+  // Toggle a member in/out of the split
+  const toggleMember = useCallback((memberId: string) => {
+    setSelectedMemberIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(memberId)) {
+        // Don't allow deselecting the last member
+        if (next.size <= 1) return prev;
+        next.delete(memberId);
+      } else {
+        next.add(memberId);
+      }
+      return next;
+    });
+  }, []);
+
+  // Select / deselect all
+  const toggleAll = () => {
+    setSelectedMemberIds((prev) => {
+      if (prev.size === members.length) {
+        return new Set(user?.id ? [user.id] : [members[0]?.id]);
+      }
+      return new Set(members.map((m) => m.id));
+    });
+  };
+
+  const handleSplitValueChange = (memberId: string, val: string) => {
+    setSplitValues((prev) => ({ ...prev, [memberId]: val }));
+    // Auto-select if value is added and member is not selected
+    if (Number(val) > 0 && !selectedMemberIds.has(memberId)) {
+      setSelectedMemberIds((prev) => {
+        const next = new Set(prev);
+        next.add(memberId);
+        return next;
+      });
+    }
+  };
+
+  // Itemized UX helpers
+  const addItem = () => {
+    setItems((prev) => [
+      ...prev,
+      { id: Math.random().toString(36).substring(2, 9), name: "", price: 0, assignedTo: [] },
+    ]);
+  };
+
+  const updateItem = (id: string, field: keyof Item, value: any) => {
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+    );
+  };
+
+  const removeItem = (id: string) => {
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const toggleItemAssignment = (itemId: string, memberId: string) => {
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.id === itemId) {
+          const isAssigned = item.assignedTo.includes(memberId);
+          return {
+            ...item,
+            assignedTo: isAssigned
+              ? item.assignedTo.filter((id) => id !== memberId)
+              : [...item.assignedTo, memberId],
+          };
+        }
+        return item;
+      })
+    );
+  };
+
+  // Sync amount for ITEMIZED
+  useEffect(() => {
+    if (splitMethod === "ITEMIZED") {
+      setValue("amount", Number(itemizedTotals.total.toFixed(2)), {
+        shouldValidate: true,
+      });
+    }
+  }, [splitMethod, itemizedTotals.total, setValue]);
+
+  // Sync splits to react-hook-form whenever selection, amount, or split values change
+  useEffect(() => {
+    if (splitMethod !== "ITEMIZED" && (selectedMembers.length === 0 || amount <= 0)) {
+      setValue("splits", [], { shouldValidate: false });
+      return;
+    }
+
+    let splits: any[] = [];
+    if (splitMethod === "ITEMIZED") {
+      splits = members
+        .filter((m) => itemizedTotals.totals[m.id] > 0)
+        .map((m) => ({
+          userId: m.id,
+          amount: Number(itemizedTotals.totals[m.id].toFixed(2)),
+        }));
+    } else if (splitMethod === "EQUAL") {
+      const splitAmount = amount / selectedMembers.length;
+      splits = selectedMembers.map((m) => ({
+        userId: m.id,
+        amount: splitAmount,
+      }));
+    } else {
+      splits = selectedMembers
+        .map((m) => {
+          const val = Number(splitValues[m.id]) || 0;
+          const base = { userId: m.id };
+          if (splitMethod === "EXACT")
+            return { ...base, amount: val };
+          if (splitMethod === "PERCENTAGE")
+            return { ...base, percentage: val };
+          if (splitMethod === "SHARES") return { ...base, shares: val };
+          return base;
+        })
+        .filter((s) => s.amount || s.percentage || s.shares);
+    }
+
+    setValue("splits", splits, { shouldValidate: true });
+  }, [amount, selectedMembers, splitMethod, splitValues, itemizedTotals, members, setValue]);
+
+  // Form submission
   const handleFormSubmit = (data: ExpenseFormValues) => {
-    if (!data.splits || data.splits.length === 0) return;
+    if (!data.splits || data.splits.length === 0 || !isValidSplit) return;
 
-    // The backend expects amount in standard units for creation, wait.
-    // In expenses.service.ts, it doesn't divide by 100 on creation. Wait!
-    // Let me check expenses.service.ts creation again.
-    // "amount: data.amount"
-    // "amountOwedToPayer = data.amount - split.amount"
-    // So the backend expects the exact amount you want to store.
-    // I'll send it multiplied by 100 to store in cents because that's typical, but wait, the form has it in standard format.
-    // Let's check how expenses.service.ts reads it:
-    // It says "totalExpense: totalExpense / 100" in getUserGroups. So backend stores in cents!
     const dataInCents: CreateExpenseInput = {
       ...data,
       category: data.category ?? "OTHER",
@@ -111,17 +323,21 @@ export function AddExpenseModal({
       amount: Math.round(data.amount * 100),
       splits: data.splits.map((s) => ({
         ...s,
-        amount: s.amount ? Math.round(s.amount * 100) : 0,
+        amount: s.amount ? Math.round(s.amount * 100) : undefined,
       })),
     };
 
     addExpense(dataInCents, {
       onSuccess: () => {
         reset();
+        setSelectedMemberIds(new Set(members.map((m) => m.id)));
+        setSplitValues({});
         onClose();
       },
     });
   };
+
+  const allSelected = selectedMemberIds.size === members.length;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -144,8 +360,9 @@ export function AddExpenseModal({
 
         <form
           onSubmit={handleSubmit(handleFormSubmit)}
-          className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto px-1 pb-2"
+          className="flex flex-col gap-4 max-h-[65vh] overflow-y-auto px-1 pb-2"
         >
+          {/* Title */}
           <div className="flex flex-col gap-2">
             <Label
               htmlFor="expense-title"
@@ -166,6 +383,7 @@ export function AddExpenseModal({
             )}
           </div>
 
+          {/* Amount */}
           <div className="flex flex-col gap-2">
             <Label
               htmlFor="expense-amount"
@@ -183,7 +401,10 @@ export function AddExpenseModal({
                 step="0.01"
                 min="0.01"
                 placeholder="0"
-                className="clay-input pl-9"
+                disabled={splitMethod === "ITEMIZED"}
+                className={`clay-input pl-9 ${
+                  splitMethod === "ITEMIZED" ? "bg-soft-clay opacity-60" : ""
+                }`}
                 {...register("amount", { valueAsNumber: true })}
               />
             </div>
@@ -194,6 +415,7 @@ export function AddExpenseModal({
             )}
           </div>
 
+          {/* Category */}
           <div className="flex flex-col gap-2">
             <Label
               htmlFor="expense-category"
@@ -216,34 +438,340 @@ export function AddExpenseModal({
             </select>
           </div>
 
-          <div className="bg-soft-clay rounded-2xl p-4 mt-2 mb-2">
-            <p className="text-sm font-semibold mb-2">Split Details</p>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Split Type</span>
-              <Badge className="clay-badge text-[10px] items-center">
-                EQUAL SPLIT
-              </Badge>
+          {/* Notes */}
+          <div className="flex flex-col gap-2">
+            <Label
+              htmlFor="expense-notes"
+              className="font-display font-bold text-sm"
+            >
+              Notes
+            </Label>
+            <textarea
+              id="expense-notes"
+              placeholder="Optional notes..."
+              className="clay-input min-h-15 resize-none"
+              {...register("notes")}
+            />
+          </div>
+
+          {/* ── Split Section ── */}
+          <div className="bg-soft-clay rounded-2xl p-4 mt-1">
+            {/* Header row */}
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-display font-bold flex items-center gap-2">
+                <Users size={16} className="text-primary" />
+                Split Between
+              </p>
+              <select
+                className="clay-input text-xs py-1 px-2 h-auto cursor-pointer border-none shadow-sm rounded-lg font-bold uppercase w-[120px] bg-white text-primary text-center appearance-none"
+                style={{ textAlignLast: 'center' }}
+                {...register("splitMethod")}
+              >
+                <option value="EQUAL">EQUAL SPLIT</option>
+                <option value="EXACT">EXACT AMOUNTS</option>
+                <option value="PERCENTAGE">PERCENTAGE</option>
+                <option value="SHARES">BY SHARES</option>
+                <option value="ITEMIZED">ITEMIZED</option>
+              </select>
             </div>
-            <Separator className="clay-divider my-3" />
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="participating"
-                checked={includeAll}
-                onChange={(e) => setIncludeAll(e.target.checked)}
-                className="size-4 accent-primary rounded-md"
-              />
-              <label htmlFor="participating" className="text-sm font-medium">
-                Split equally between all {members.length} members
-              </label>
-            </div>
+
+            {/* Select all toggle & Member list for non-ITEMIZED */}
+            {splitMethod === "ITEMIZED" ? (
+              <div className="flex flex-col gap-3 mt-3">
+                {items.map((item) => (
+                  <div key={item.id} className="bg-white p-3 rounded-xl shadow-sm border border-border">
+                    <div className="flex gap-2 items-start">
+                      <div className="flex-1 min-w-0">
+                        <Input 
+                           placeholder="Item name (e.g. Pizza)" 
+                           className="h-8 text-sm clay-input mb-2" 
+                           value={item.name}
+                           onChange={(e) => updateItem(item.id, 'name', e.target.value)}
+                        />
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase mb-1">Shared by</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {members.map(m => {
+                            const isAssigned = item.assignedTo.includes(m.id);
+                            return (
+                              <Avatar 
+                                key={m.id} 
+                                onClick={() => toggleItemAssignment(item.id, m.id)}
+                                className={`size-6 cursor-pointer transition-all ${isAssigned ? 'ring-2 ring-primary ring-offset-1 scale-110' : 'opacity-40 hover:opacity-100 grayscale hover:grayscale-0'}`}
+                              >
+                                 {m.avatarUrl && <AvatarImage src={m.avatarUrl} referrerPolicy="no-referrer" />}
+                                 <AvatarFallback style={{backgroundColor: m.color}} className="text-[10px] text-white font-bold">{m.initial}</AvatarFallback>
+                              </Avatar>
+                            )
+                          })}
+                        </div>
+                      </div>
+                      <div className="w-24 shrink-0 flex flex-col items-end gap-2">
+                         <Input 
+                           type="number" 
+                           placeholder="₹ 0" 
+                           min="0"
+                           step="0.01"
+                           className="h-8 text-sm clay-input text-right" 
+                           value={item.price || ''}
+                           onChange={(e) => updateItem(item.id, 'price', Number(e.target.value))}
+                         />
+                         {items.length > 1 && (
+                           <button type="button" onClick={() => removeItem(item.id)} className="text-red-400 hover:text-red-500 text-[10px] font-bold px-1">
+                             Remove
+                           </button>
+                         )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                <Button type="button" variant="ghost" onClick={addItem} className="border border-dashed border-border text-primary hover:bg-soft-clay w-full h-8 text-xs">
+                  + Add Item
+                </Button>
+                
+                <Separator className="clay-divider my-2" />
+                
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <Label className="text-[10px] text-muted-foreground font-bold uppercase ml-1">Tax</Label>
+                    <Input type="number" min="0" step="0.01" placeholder="₹ 0" className="h-8 text-xs clay-input" value={tax || ''} onChange={e => setTax(Number(e.target.value))} />
+                  </div>
+                  <div className="flex-1">
+                    <Label className="text-[10px] text-muted-foreground font-bold uppercase ml-1">Tip</Label>
+                    <Input type="number" min="0" step="0.01" placeholder="₹ 0" className="h-8 text-xs clay-input" value={tip || ''} onChange={e => setTip(Number(e.target.value))} />
+                  </div>
+                </div>
+                
+                {itemizedTotals.total > 0 && (
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 mt-2 flex flex-col gap-1">
+                     {members.map(m => {
+                        const owes = itemizedTotals.totals[m.id];
+                        if (!owes) return null;
+                        return (
+                           <div key={m.id} className="flex justify-between text-xs">
+                              <span className="font-medium text-foreground">{m.id === user?.id ? 'You' : m.name}</span>
+                              <span className="font-bold text-primary">{formatSplitAmount(owes)}</span>
+                           </div>
+                        )
+                     })}
+                     <Separator className="clay-divider my-1.5" />
+                     <div className="flex justify-between text-sm">
+                        <span className="font-bold text-foreground">Total calculated</span>
+                        <span className="font-black text-primary">{formatSplitAmount(itemizedTotals.total)}</span>
+                     </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                {/* Select all toggle */}
+                {splitMethod === "EQUAL" && (
+                  <button
+                    type="button"
+                    onClick={toggleAll}
+                    className="w-full flex items-center justify-between py-2 px-3 rounded-xl bg-white mb-2 text-sm font-medium transition-all hover:shadow-sm"
+                  >
+                    <span className="text-muted-foreground">
+                      {allSelected
+                        ? "Deselect all"
+                        : `Select all ${members.length} members`}
+                    </span>
+                    <div
+                      className={`size-5 rounded-md flex items-center justify-center transition-all duration-200 ${
+                        allSelected
+                          ? "bg-primary text-white shadow-sm"
+                          : "bg-soft-clay border border-border"
+                      }`}
+                    >
+                      {allSelected && <Check size={12} strokeWidth={3} />}
+                    </div>
+                  </button>
+                )}
+
+                <Separator className="clay-divider my-2" />
+
+                {/* Member list */}
+                <div className="space-y-1 max-h-45 overflow-y-auto pr-1">
+                  {members.map((member) => {
+                    const isSelected = selectedMemberIds.has(member.id);
+                    const isOnlySelected =
+                      isSelected && selectedMemberIds.size === 1;
+
+                    return (
+                      <div
+                        key={member.id}
+                        className={`w-full flex items-center gap-3 py-2 px-3 rounded-xl transition-all duration-200 group ${
+                          isSelected
+                            ? "bg-white shadow-sm"
+                            : "bg-transparent hover:bg-white/60 opacity-50"
+                        }`}
+                      >
+                        <div
+                          className={`flex items-center gap-3 flex-1 ${
+                            splitMethod === "EQUAL" && isOnlySelected
+                              ? "cursor-not-allowed"
+                              : "cursor-pointer"
+                          }`}
+                          onClick={() =>
+                            (splitMethod !== "EQUAL" || !isOnlySelected) &&
+                            toggleMember(member.id)
+                          }
+                        >
+                          {/* Avatar */}
+                          <Avatar className="size-8 shrink-0">
+                            {member.avatarUrl && (
+                              <AvatarImage
+                                src={member.avatarUrl}
+                                alt={member.name}
+                                referrerPolicy="no-referrer"
+                              />
+                            )}
+                            <AvatarFallback
+                              className="text-xs font-bold text-white"
+                              style={{ backgroundColor: member.color }}
+                            >
+                              {member.initial}
+                            </AvatarFallback>
+                          </Avatar>
+
+                          {/* Name + amount */}
+                          <div className="flex-1 text-left min-w-0">
+                            <p className="text-sm font-semibold truncate">
+                              {member.id === user?.id ? "You" : member.name}
+                            </p>
+                            {splitMethod === "EQUAL" && isSelected && amount > 0 && (
+                              <p className="text-xs text-primary font-medium">
+                                {formatSplitAmount(perPersonAmount)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Inputs & Checkbox indicator */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          {splitMethod !== "EQUAL" && (
+                            <div className="w-20">
+                              <Input
+                                type="number"
+                                min="0"
+                                step={splitMethod === "SHARES" ? "1" : "0.01"}
+                                placeholder={
+                                  splitMethod === "PERCENTAGE" ? "0%" : "0"
+                                }
+                                className={`h-8 text-xs clay-input text-right ${
+                                  !isSelected ? "opacity-50" : ""
+                                }`}
+                                value={splitValues[member.id] || ""}
+                                onChange={(e) =>
+                                  handleSplitValueChange(member.id, e.target.value)
+                                }
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          )}
+
+                          {/* Toggle Checkbox */}
+                          <div
+                            onClick={() =>
+                              !isOnlySelected && toggleMember(member.id)
+                            }
+                            className={`size-5 rounded-md flex items-center justify-center transition-all duration-200 shrink-0 cursor-pointer ${
+                              isSelected
+                                ? "bg-primary text-white shadow-sm"
+                                : "bg-soft-clay border border-border group-hover:border-primary/30"
+                            } ${
+                              isOnlySelected && splitMethod === "EQUAL"
+                                ? "cursor-not-allowed"
+                                : ""
+                            }`}
+                          >
+                            {isSelected && <Check size={12} strokeWidth={3} />}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Summary */}
+                {amount > 0 && selectedMembers.length > 0 && (
+                  <>
+                    <Separator className="clay-divider my-3" />
+                    {splitMethod === "EQUAL" ? (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground font-medium">
+                          {selectedMembers.length} of {members.length} members
+                        </span>
+                        <span className="font-bold text-foreground">
+                          {formatSplitAmount(perPersonAmount)} / person
+                        </span>
+                      </div>
+                    ) : splitMethod === "EXACT" ? (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground font-medium">
+                          Total: {formatSplitAmount(totalEnteredAmount)}
+                        </span>
+                        <span
+                          className={`font-bold ${
+                            Math.abs(totalEnteredAmount - amount) < 0.01
+                              ? "text-green-500"
+                              : "text-red-500"
+                          }`}
+                        >
+                          {Math.abs(totalEnteredAmount - amount) < 0.01
+                            ? "Amount matches"
+                            : `Remaining: ${formatSplitAmount(
+                                amount - totalEnteredAmount
+                              )}`}
+                        </span>
+                      </div>
+                    ) : splitMethod === "PERCENTAGE" ? (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground font-medium">
+                          Total Percentage
+                        </span>
+                        <span
+                          className={`font-bold ${
+                            Math.abs(totalPercentage - 100) < 0.01
+                              ? "text-green-500"
+                              : "text-red-500"
+                          }`}
+                        >
+                          {totalPercentage}% / 100%
+                        </span>
+                      </div>
+                    ) : splitMethod === "SHARES" ? (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground font-medium">
+                          Total Shares
+                        </span>
+                        <span className="font-bold text-foreground">
+                          {totalShares}
+                        </span>
+                      </div>
+                    ) : null}
+                  </>
+                )}
+              </>
+            )}
+
             {errors.splits && (
               <span className="text-red-500 text-xs block mt-2">
-                {errors.splits.message}
+                {errors.splits.message || "Please check the split values"}
+              </span>
+            )}
+            {!isValidSplit && splitMethod !== "EQUAL" && (
+              <span className="text-red-500 text-xs block mt-2">
+                {splitMethod === "PERCENTAGE"
+                  ? "Percentages must add up to 100%"
+                  : splitMethod === "EXACT" || splitMethod === "ITEMIZED"
+                  ? "Split amounts must add up to the total expense amount"
+                  : "Please enter valid split values"}
               </span>
             )}
           </div>
 
+          {/* ── Footer ── */}
           <DialogFooter className="mt-2 border-none">
             <Button
               type="button"
@@ -256,7 +784,9 @@ export function AddExpenseModal({
             </Button>
             <button
               type="submit"
-              disabled={isPending}
+              disabled={
+                isPending || (splitMethod !== "ITEMIZED" && selectedMembers.length === 0) || !isValidSplit
+              }
               className="clay-btn-primary px-6 py-2.5 text-sm font-display shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isPending && <Loader2 className="size-4 animate-spin" />}
