@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useUserProfile } from "@/hooks/useUser";
 import { Loader2 } from "lucide-react";
+import { VpaOnboardingModal } from "./VpaOnboardingModal";
 
 export function ProtectedRoute() {
   const { data: user, isLoading, isError } = useUserProfile();
@@ -30,7 +31,13 @@ export function ProtectedRoute() {
     return <Navigate to="/login" replace />;
   }
 
-  return <Outlet />;
+  return (
+    <>
+      {/* Show VPA onboarding modal if user hasn't set their UPI ID yet */}
+      <VpaOnboardingModal isOpen={!user.vpa} />
+      <Outlet />
+    </>
+  );
 }
 
 export function PublicRoute() {

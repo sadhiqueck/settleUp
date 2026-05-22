@@ -74,6 +74,7 @@ model User {
   id              String   @id @default(cuid())
   email           String   @unique
   name            String
+  vpa             String?  @unique
   avatarUrl       String?
   passwordHash    String?
   googleId        String?  @unique
@@ -143,19 +144,6 @@ model GroupMember {
   @@unique([userId, groupId])
   @@index([groupId])
   @@map("group_members")
-}
-
-model GroupMemberBalance {
-  id        String  @id @default(cuid())
-  groupId   String
-  userId    String
-  balance   Int     @default(0)  // stored in paise/cents
-
-  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  user  User  @relation(fields: [userId], references: [id])
-
-  @@unique([groupId, userId])
-  @@map("group_member_balances")
 }
 
 // ─── Financial Core ───────────────────────────────────

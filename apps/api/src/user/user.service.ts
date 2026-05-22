@@ -12,6 +12,7 @@ export class UserService {
         id: true,
         email: true,
         name: true,
+        vpa: true,
         avatarUrl: true,
         createdAt: true,
         updatedAt: true,
@@ -27,7 +28,7 @@ export class UserService {
 
   async updateProfile(
     userId: string,
-    data: { name?: string; avatarUrl?: string },
+    data: { name?: string; avatarUrl?: string; vpa?: string },
   ) {
     const user = await this.prisma.user.update({
       where: { id: userId },
@@ -36,6 +37,7 @@ export class UserService {
         id: true,
         email: true,
         name: true,
+        vpa: true,
         avatarUrl: true,
         createdAt: true,
         updatedAt: true,

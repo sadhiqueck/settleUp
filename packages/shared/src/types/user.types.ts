@@ -2,6 +2,7 @@ export interface User {
   id: string
   email: string
   name: string
+  vpa: string | null
   avatarUrl: string | null
   createdAt: string
   updatedAt:string

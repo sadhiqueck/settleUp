@@ -159,6 +159,7 @@ export class AuthService {
     id: string;
     email: string;
     name: string;
+    vpa?: string | null;
   }) {
     const payload = { sub: user.id, email: user.email };
     const access_token = this.jwtService.sign(payload);
@@ -188,6 +189,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         name: user.name,
+        vpa: user.vpa ?? null,
       },
     };
   }
