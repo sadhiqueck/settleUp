@@ -21,6 +21,8 @@ import {
   Plus,
   LogOut,
   Users,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import type { GroupExpense } from "@/hooks/useGroups";
 import { useGroup, useLeaveGroup } from "@/hooks/useGroups";
@@ -28,6 +30,10 @@ import type { AxiosError } from "axios";
 import { toast } from "sonner";
 import { InviteMemberModal } from "@/components/groups/InviteMemberModal";
 import { AddExpenseModal } from "@/components/groups/AddExpenseModal";
+import { EditExpenseModal } from "@/components/groups/EditExpenseModal";
+import { DeleteExpenseDialog } from "@/components/groups/DeleteExpenseDialog";
+import { UpiPayButton } from "@/components/groups/UpiPayButton";
+import { useUserProfile } from "@/hooks/useUser";
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-IN", {
@@ -102,9 +108,15 @@ function groupExpensesByDate(
 function ExpenseFeed({
   expenses,
   onAddExpense,
+  currentUserId,
+  onEditExpense,
+  onDeleteExpense,
 }: {
   expenses: GroupExpense[];
   onAddExpense: () => void;
+  currentUserId: string | undefined;
+  onEditExpense: (expense: GroupExpense) => void;
+  onDeleteExpense: (expense: GroupExpense) => void;
 }) {
   const dateGroups = useMemo(
     () => groupExpensesByDate(expenses ?? []),
@@ -154,10 +166,11 @@ function ExpenseFeed({
               const cat =
                 CATEGORY_CONFIG[expense.category] ?? CATEGORY_CONFIG.OTHER;
               const delay = Math.min(itemIndex++ * 0.05, 0.4);
+              const isOwnExpense = expense.paidById === currentUserId;
               return (
                 <div
                   key={expense.id}
-                  className="clay-card p-0 overflow-hidden group cursor-pointer animate-clay-fade-up"
+                  className="clay-card p-0 overflow-hidden group animate-clay-fade-up"
                   style={{ opacity: 0, animationDelay: `${delay}s` }}
                 >
                   <div className="flex items-center gap-4 p-4 sm:p-5">
@@ -196,16 +209,37 @@ function ExpenseFeed({
                       </p>
                     </div>
 
-                    {/* Amount */}
-                    <div className="text-right shrink-0 pl-2">
-                      <p className="font-sans font-bold text-lg tracking-tight">
-                        {formatCurrency(expense.amount)}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">
-                        {expense.splitMethod === "EQUAL"
-                          ? "Equal"
-                          : expense.splitMethod.toLowerCase()}
-                      </p>
+                    {/* Amount + Actions */}
+                    <div className="flex items-center gap-3 shrink-0 pl-2">
+                      <div className="text-right">
+                        <p className="font-sans font-bold text-lg tracking-tight">
+                          {formatCurrency(expense.amount)}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">
+                          {expense.splitMethod === "EQUAL"
+                            ? "Equal"
+                            : expense.splitMethod.toLowerCase()}
+                        </p>
+                      </div>
+                      {/* Edit/Delete actions (only for payer's own expenses) */}
+                      {isOwnExpense && (
+                        <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <button
+                            onClick={() => onEditExpense(expense)}
+                            className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                            title="Edit expense"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            onClick={() => onDeleteExpense(expense)}
+                            className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors"
+                            title="Delete expense"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -234,8 +268,10 @@ export default function GroupDetailsPage() {
   );
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<GroupExpense | null>(null);
+  const [deletingExpense, setDeletingExpense] = useState<GroupExpense | null>(null);
   const { data: group, isLoading, error } = useGroup(id);
-  console.log(group);
+  const { data: currentUser } = useUserProfile();
   const leaveGroupMutation = useLeaveGroup();
 
   if (isLoading) {
@@ -451,6 +487,9 @@ export default function GroupDetailsPage() {
             <ExpenseFeed
               expenses={group.expenses}
               onAddExpense={() => setIsAddExpenseOpen(true)}
+              currentUserId={currentUser?.id}
+              onEditExpense={(expense) => setEditingExpense(expense)}
+              onDeleteExpense={(expense) => setDeletingExpense(expense)}
             />
           ) : activeTab === "balances" ? (
             <div className="space-y-8">
@@ -523,9 +562,12 @@ export default function GroupDetailsPage() {
                         <span className="font-sans font-bold text-lg">
                           {formatCurrency(settle.amount)}
                         </span>
-                        <button className="clay-btn-secondary text-xs px-4 py-2 shrink-0 shadow-sm">
-                          Mark Settled
-                        </button>
+                        <UpiPayButton
+                          receiverVpa={settle.toVpa}
+                          receiverName={settle.to}
+                          amount={settle.amount}
+                          groupName={group.name}
+                        />
                       </div>
                     </div>
                   ))}
@@ -602,6 +644,28 @@ export default function GroupDetailsPage() {
         groupName={group.name}
         inviteCode={group.inviteCode}
       />
+
+      {/* ── Edit Expense Modal ── */}
+      {editingExpense && (
+        <EditExpenseModal
+          isOpen={true}
+          onClose={() => setEditingExpense(null)}
+          groupId={group.id}
+          expense={editingExpense}
+        />
+      )}
+
+      {/* ── Delete Expense Dialog ── */}
+      {deletingExpense && (
+        <DeleteExpenseDialog
+          isOpen={true}
+          onClose={() => setDeletingExpense(null)}
+          groupId={group.id}
+          expenseId={deletingExpense.id}
+          expenseTitle={deletingExpense.title}
+          expenseAmount={deletingExpense.amount}
+        />
+      )}
     </div>
   );
 }

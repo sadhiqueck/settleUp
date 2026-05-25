@@ -11,6 +11,7 @@ import { GroupRole, ActivityType, GroupCategory } from '@prisma/client';
 import type { Group } from '@prisma/client';
 import { randomBytes } from 'crypto';
 import { ConfigService } from '@nestjs/config';
+import { decryptVpaSafe } from '../common/utils/encryption';
 
 const GROUP_CATEGORY_MAP: Record<CreateGroupInput['category'], GroupCategory> =
   {
@@ -236,10 +237,10 @@ export class GroupsService {
       include: {
         members: {
           where: { isActive: true },
-          include: { user: true },
+          include: { user: { select: { id: true, name: true, avatarUrl: true, vpa: true } } },
         },
         balances: {
-          include: { user: true },
+          include: { user: { select: { id: true, name: true, vpa: true } } },
         },
         expenses: {
           where: { isDeleted: false },
@@ -281,9 +282,19 @@ export class GroupsService {
       day: 'numeric',
     }).format(new Date(lastActivityDate));
 
-    // Build member name lookup
+    // Build member name and VPA lookup
     const memberNameMap = new Map<string, string>();
-    group.members.forEach((m) => memberNameMap.set(m.userId, m.user.name));
+    const memberVpaMap = new Map<string, string | null>();
+    group.members.forEach((m) => {
+      memberNameMap.set(m.userId, m.user.name);
+      memberVpaMap.set(m.userId, decryptVpaSafe(m.user.vpa));
+    });
+    // Also include VPA from balances (in case a member left but still has balance)
+    group.balances.forEach((b) => {
+      if (!memberVpaMap.has(b.userId)) {
+        memberVpaMap.set(b.userId, decryptVpaSafe(b.user.vpa));
+      }
+    });
 
     // --- Expenses ---
     const expenses = group.expenses.map((exp) => ({
@@ -308,7 +319,7 @@ export class GroupsService {
     }));
 
     // --- Settlement suggestions (greedy algorithm) ---
-    const settlements = this.calculateSettlements(group.balances, memberNameMap, userId);
+    const settlements = this.calculateSettlements(group.balances, memberNameMap, memberVpaMap, userId);
 
     // --- Activity feed ---
     const activityTypeMap: Record<string, string> = {
@@ -368,6 +379,7 @@ export class GroupsService {
   private calculateSettlements(
     balances: { userId: string; balance: number }[],
     nameMap: Map<string, string>,
+    vpaMap: Map<string, string | null>,
     currentUserId: string,
   ) {
     const debtors: { userId: string; amount: number }[] = [];
@@ -381,7 +393,15 @@ export class GroupsService {
     debtors.sort((a, b) => b.amount - a.amount);
     creditors.sort((a, b) => b.amount - a.amount);
 
-    const settlements: { from: string; to: string; amount: number }[] = [];
+    const settlements: {
+      from: string;
+      fromId: string;
+      fromVpa: string | null;
+      to: string;
+      toId: string;
+      toVpa: string | null;
+      amount: number;
+    }[] = [];
     let i = 0;
     let j = 0;
 
@@ -396,7 +416,15 @@ export class GroupsService {
           creditors[j].userId === currentUserId
             ? 'You'
             : (nameMap.get(creditors[j].userId) ?? 'Unknown');
-        settlements.push({ from: fromName, to: toName, amount: transfer / 100 });
+        settlements.push({
+          from: fromName,
+          fromId: debtors[i].userId,
+          fromVpa: vpaMap.get(debtors[i].userId) ?? null,
+          to: toName,
+          toId: creditors[j].userId,
+          toVpa: vpaMap.get(creditors[j].userId) ?? null,
+          amount: transfer / 100,
+        });
       }
       debtors[i].amount -= transfer;
       creditors[j].amount -= transfer;

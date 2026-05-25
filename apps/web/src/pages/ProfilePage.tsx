@@ -1,4 +1,5 @@
 import {useState } from "react";
+import { VPA_REGEX } from "@settleup/shared";
 import { useNavigate } from "react-router-dom";
 // import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,9 @@ import {
 } from "@/components/ui/card";
 import {
   ArrowLeft,
+  AtSign,
   Bell,
+  CheckCircle2,
   Key,
   Loader2,
   LogOut,
@@ -28,6 +31,7 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [vpa, setVpa] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
 
   //  Fetch user data
@@ -39,11 +43,14 @@ export default function ProfilePage() {
   if (user && !isInitialized) {
     setName(user.name || "");
     setEmail(user.email || "");
+    setVpa(user.vpa || "");
     setIsInitialized(true)
   }
 
+  const isVpaValid = vpa.length === 0 || VPA_REGEX.test(vpa);
+
   const handleSaveChanges = () => {
-    updateProfileMutation.mutate({ name });
+    updateProfileMutation.mutate({ name, ...(vpa && isVpaValid ? { vpa } : {}) });
   };
 
   const getInitials = (fullname: string) => {
@@ -120,6 +127,12 @@ export default function ProfilePage() {
             {name}
           </h2>
           <p className="text-muted-foreground font-medium z-10">{email}</p>
+          {user?.vpa && (
+            <p className="text-sm text-primary font-medium z-10 flex items-center gap-1 mt-1">
+              <AtSign size={14} />
+              {user.vpa}
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-8">
@@ -172,6 +185,40 @@ export default function ProfilePage() {
                     disabled={true}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label className="font-display font-bold text-sm flex items-center gap-2">
+                    UPI ID (VPA)
+                    {vpa && isVpaValid && (
+                      <span className="clay-badge clay-badge-green text-[10px] px-2 py-0 flex items-center gap-1">
+                        <CheckCircle2 size={10} />
+                        Valid
+                      </span>
+                    )}
+                  </Label>
+                  <div className="relative">
+                    <AtSign
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+                      size={18}
+                    />
+                    <Input
+                      value={vpa}
+                      onChange={(e) => setVpa(e.target.value.trim())}
+                      placeholder="yourname@upi"
+                      className={`clay-input pl-11 ${
+                        vpa && !isVpaValid
+                          ? "ring-2 ring-red-500/30 border-red-500/50"
+                          : vpa && isVpaValid
+                            ? "ring-2 ring-green-500/30 border-green-500/50"
+                            : ""
+                      }`}
+                    />
+                  </div>
+                  {vpa && !isVpaValid && (
+                    <p className="text-xs text-red-500 font-medium">
+                      Enter a valid UPI ID (e.g. name@okaxis, phone@ybl)
+                    </p>
+                  )}
+                </div>
                 {/* <div className="space-y-2">
                   <Label className="font-display font-bold text-sm">
                     Phone Number
@@ -185,10 +232,10 @@ export default function ProfilePage() {
                   <button
                     onClick={handleSaveChanges}
                     disabled={
-                      updateProfileMutation.isPending || name === user?.name
+                      updateProfileMutation.isPending || (name === user?.name && vpa === (user?.vpa || '')) || (vpa && !isVpaValid)
                     }
                     className={`clay-btn-primary px-8 text-sm transition-all duration-200 ${
-                      updateProfileMutation.isPending || name === user?.name
+                      updateProfileMutation.isPending || (name === user?.name && vpa === (user?.vpa || '')) || (vpa && !isVpaValid)
                         ? "opacity-50 cursor-not-allowed grayscale-[0.5]"
                         : ""
                     }`}

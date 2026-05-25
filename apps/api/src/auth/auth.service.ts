@@ -9,6 +9,7 @@ import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import type { RegisterInput, LoginInput } from '@settleup/shared';
 import type { Profile } from 'passport-google-oauth20';
+import { decryptVpaSafe } from '../common/utils/encryption';
 
 @Injectable()
 export class AuthService {
@@ -189,7 +190,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         name: user.name,
-        vpa: user.vpa ?? null,
+        vpa: decryptVpaSafe(user.vpa),
       },
     };
   }

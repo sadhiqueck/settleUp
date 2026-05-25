@@ -50,7 +50,11 @@ export interface GroupBalance {
 
 export interface GroupSettlement {
   from: string;
+  fromId: string;
+  fromVpa: string | null;
   to: string;
+  toId: string;
+  toVpa: string | null;
   amount: number;
 }
 

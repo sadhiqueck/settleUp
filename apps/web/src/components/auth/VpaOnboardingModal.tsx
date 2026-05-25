@@ -21,6 +21,7 @@ export function VpaOnboardingModal({ isOpen }: VpaOnboardingModalProps) {
   const [vpa, setVpa] = useState("");
   const [touched, setTouched] = useState(false);
   const updateProfileMutation = useUpdateProfile();
+  console.log(VPA_REGEX)
 
   const isValid = VPA_REGEX.test(vpa);
   const showError = touched && vpa.length > 0 && !isValid;
@@ -52,16 +53,14 @@ export function VpaOnboardingModal({ isOpen }: VpaOnboardingModalProps) {
         <div
           className="absolute top-[-30%] right-[-20%] w-56 h-56 rounded-full opacity-15 pointer-events-none"
           style={{
-            background:
-              "radial-gradient(circle, #00C700 0%, transparent 70%)",
+            background: "radial-gradient(circle, #00C700 0%, transparent 70%)",
             filter: "blur(50px)",
           }}
         />
         <div
           className="absolute bottom-[-20%] left-[-15%] w-40 h-40 rounded-full opacity-10 pointer-events-none"
           style={{
-            background:
-              "radial-gradient(circle, #6CE71D 0%, transparent 70%)",
+            background: "radial-gradient(circle, #6CE71D 0%, transparent 70%)",
             filter: "blur(40px)",
           }}
         />

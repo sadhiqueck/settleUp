@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { encryptVpa, decryptVpaSafe } from '../common/utils/encryption';
 
 @Injectable()
 export class UserService {
@@ -23,16 +24,23 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
-    return user;
+    // Decrypt VPA before returning to the client
+    return { ...user, vpa: decryptVpaSafe(user.vpa) };
   }
 
   async updateProfile(
     userId: string,
     data: { name?: string; avatarUrl?: string; vpa?: string },
   ) {
+    // Encrypt VPA before storing in the database
+    const dbData = {
+      ...data,
+      ...(data.vpa !== undefined ? { vpa: encryptVpa(data.vpa) } : {}),
+    };
+
     const user = await this.prisma.user.update({
       where: { id: userId },
-      data,
+      data: dbData,
       select: {
         id: true,
         email: true,
@@ -44,7 +52,8 @@ export class UserService {
       },
     });
 
-    return user;
+    // Decrypt VPA before returning to the client
+    return { ...user, vpa: decryptVpaSafe(user.vpa) };
   }
 
   async searchUsers(query: string) {
