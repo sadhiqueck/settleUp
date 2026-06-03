@@ -24,9 +24,6 @@ import {
   Pencil,
   Trash2,
   ChevronDown,
-  UserCheck,
-  UserX,
-  CreditCard,
 } from "lucide-react";
 import type { GroupExpense, GroupMember } from "@/hooks/useGroups";
 import { useGroup, useLeaveGroup } from "@/hooks/useGroups";
@@ -268,83 +265,58 @@ function ExpenseFeed({
                   >
                     <div className="px-4 sm:px-5 pb-4 sm:pb-5 pt-0">
                       <div className="border-t border-border/50 pt-4 space-y-3">
-                        {/* Paid by */}
+                        {/* Section header */}
                         <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                          <CreditCard size={12} className="text-primary" />
-                          Paid by
-                        </div>
-                        <div className="flex items-center gap-3 clay-card-pressed px-3 py-2.5 rounded-xl">
-                          <div className="size-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                            <CreditCard size={13} className="text-primary" />
-                          </div>
-                          <span className="text-sm font-bold text-foreground">
-                            {expense.paidBy}
-                          </span>
-                          <span className="ml-auto font-sans font-bold text-sm text-primary">
-                            {formatCurrency(expense.amount)}
-                          </span>
+                          <Users size={12} className="text-primary" />
+                          Split Details ({expense.splits.length} members)
                         </div>
 
-                        {/* Split among */}
-                        <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-3">
-                          <UserCheck size={12} className="text-emerald-600" />
-                          Included in split ({expense.splits.length})
-                        </div>
+                        {/* Unified split list */}
                         <div className="space-y-1.5">
-                          {expense.splits.map((split) => (
-                            <div
-                              key={split.userId}
-                              className="flex items-center gap-3 clay-card-pressed px-3 py-2 rounded-xl"
-                            >
-                              <div className="size-7 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0">
-                                <span className="text-[11px] font-bold text-emerald-700">
-                                  {split.name.charAt(0).toUpperCase()}
-                                </span>
-                              </div>
-                              <span className="text-sm font-semibold text-foreground">
-                                {split.name}
-                              </span>
-                              <span className="ml-auto font-sans font-bold text-sm text-foreground/80">
-                                {formatCurrency(split.amount)}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Not included */}
-                        {(() => {
-                          const splitUserIds = new Set(expense.splits.map((s) => s.userId));
-                          const excluded = members.filter((m) => !splitUserIds.has(m.id));
-                          if (excluded.length === 0) return null;
-                          return (
-                            <>
-                              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-3">
-                                <UserX size={12} className="text-muted-foreground/60" />
-                                Not included ({excluded.length})
-                              </div>
-                              <div className="space-y-1.5">
-                                {excluded.map((member) => (
-                                  <div
-                                    key={member.id}
-                                    className="flex items-center gap-3 px-3 py-2 rounded-xl opacity-50"
+                          {expense.splits.map((split) => {
+                            const isPayer = split.userId === expense.paidById;
+                            return (
+                              <div
+                                key={split.userId}
+                                className="flex items-center gap-3 clay-card-pressed px-3 py-2.5 rounded-xl"
+                              >
+                                <div
+                                  className={`size-7 rounded-full flex items-center justify-center shrink-0 ${
+                                    isPayer ? "bg-primary/15" : "bg-amber-500/15"
+                                  }`}
+                                >
+                                  <span
+                                    className={`text-[11px] font-bold ${
+                                      isPayer ? "text-primary" : "text-amber-700"
+                                    }`}
                                   >
-                                    <div className="size-7 rounded-full bg-muted/40 flex items-center justify-center shrink-0">
-                                      <span className="text-[11px] font-bold text-muted-foreground">
-                                        {member.initial}
-                                      </span>
-                                    </div>
-                                    <span className="text-sm font-medium text-muted-foreground">
-                                      {member.id === currentUserId ? "You" : member.name}
+                                    {split.name.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                                <div className="flex flex-col min-w-0">
+                                  <span className="text-sm font-semibold text-foreground truncate">
+                                    {split.name}
+                                  </span>
+                                  <span className="text-[11px] text-muted-foreground font-medium">
+                                    {isPayer ? "Paid the bill" : `Share: ${formatCurrency(split.amount)}`}
+                                  </span>
+                                </div>
+                                <div className="ml-auto shrink-0">
+                                  {isPayer ? (
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-500/10 px-2.5 py-1 rounded-full">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                      Paid
                                     </span>
-                                    <span className="ml-auto text-xs font-medium text-muted-foreground">
-                                      —
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-500/10 px-2.5 py-1 rounded-full">
+                                      Owes {formatCurrency(split.amount)}
                                     </span>
-                                  </div>
-                                ))}
+                                  )}
+                                </div>
                               </div>
-                            </>
-                          );
-                        })()}
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   </div>
