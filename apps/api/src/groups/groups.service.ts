@@ -309,6 +309,11 @@ export class GroupsService {
       date: exp.date.toISOString(),
       notes: exp.notes,
       splitCount: exp.splits.length,
+      splits: exp.splits.map((s) => ({
+        userId: s.userId,
+        name: s.userId === userId ? 'You' : s.user.name,
+        amount: s.amount / 100,
+      })),
     }));
 
     // --- Balances (all members) ---

@@ -28,6 +28,12 @@ interface GroupsApiResponse {
   groups: GroupData[];
 }
 
+export interface ExpenseSplitDetail {
+  userId: string;
+  name: string;
+  amount: number;
+}
+
 export interface GroupExpense {
   id: string;
   title: string;
@@ -40,6 +46,7 @@ export interface GroupExpense {
   date: string;
   notes?: string | null;
   splitCount: number;
+  splits: ExpenseSplitDetail[];
 }
 
 export interface GroupBalance {

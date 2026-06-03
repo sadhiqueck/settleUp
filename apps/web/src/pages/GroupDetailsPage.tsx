@@ -23,8 +23,12 @@ import {
   Users,
   Pencil,
   Trash2,
+  ChevronDown,
+  UserCheck,
+  UserX,
+  CreditCard,
 } from "lucide-react";
-import type { GroupExpense } from "@/hooks/useGroups";
+import type { GroupExpense, GroupMember } from "@/hooks/useGroups";
 import { useGroup, useLeaveGroup } from "@/hooks/useGroups";
 import type { AxiosError } from "axios";
 import { toast } from "sonner";
@@ -113,13 +117,16 @@ function ExpenseFeed({
   currentUserId,
   onEditExpense,
   onDeleteExpense,
+  members,
 }: {
   expenses: GroupExpense[];
   onAddExpense: () => void;
   currentUserId: string | undefined;
   onEditExpense: (expense: GroupExpense) => void;
   onDeleteExpense: (expense: GroupExpense) => void;
+  members: GroupMember[];
 }) {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const dateGroups = useMemo(
     () => groupExpensesByDate(expenses ?? []),
     [expenses],
@@ -175,7 +182,11 @@ function ExpenseFeed({
                   className="clay-card p-0 overflow-hidden group animate-clay-fade-up"
                   style={{ opacity: 0, animationDelay: `${delay}s` }}
                 >
-                  <div className="flex items-center gap-4 p-4 sm:p-5">
+                  {/* Main row — clickable to expand */}
+                  <div
+                    className="flex items-center gap-4 p-4 sm:p-5 cursor-pointer select-none"
+                    onClick={() => setExpandedId(expandedId === expense.id ? null : expense.id)}
+                  >
                     {/* Category Icon */}
                     <div
                       className={`size-12 rounded-2xl ${cat.bg} flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform duration-300`}
@@ -211,7 +222,7 @@ function ExpenseFeed({
                       </p>
                     </div>
 
-                    {/* Amount + Actions */}
+                    {/* Amount + Actions + Chevron */}
                     <div className="flex items-center gap-3 shrink-0 pl-2">
                       <div className="text-right">
                         <p className="font-sans font-bold text-lg tracking-tight">
@@ -227,14 +238,14 @@ function ExpenseFeed({
                       {isOwnExpense && (
                         <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                           <button
-                            onClick={() => onEditExpense(expense)}
+                            onClick={(e) => { e.stopPropagation(); onEditExpense(expense); }}
                             className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
                             title="Edit expense"
                           >
                             <Pencil size={14} />
                           </button>
                           <button
-                            onClick={() => onDeleteExpense(expense)}
+                            onClick={(e) => { e.stopPropagation(); onDeleteExpense(expense); }}
                             className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors"
                             title="Delete expense"
                           >
@@ -242,6 +253,99 @@ function ExpenseFeed({
                           </button>
                         </div>
                       )}
+                      <ChevronDown
+                        size={16}
+                        className={`text-muted-foreground transition-transform duration-300 ${expandedId === expense.id ? "rotate-180" : ""}`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Expandable split breakdown */}
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                      expandedId === expense.id ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+                    }`}
+                  >
+                    <div className="px-4 sm:px-5 pb-4 sm:pb-5 pt-0">
+                      <div className="border-t border-border/50 pt-4 space-y-3">
+                        {/* Paid by */}
+                        <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          <CreditCard size={12} className="text-primary" />
+                          Paid by
+                        </div>
+                        <div className="flex items-center gap-3 clay-card-pressed px-3 py-2.5 rounded-xl">
+                          <div className="size-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                            <CreditCard size={13} className="text-primary" />
+                          </div>
+                          <span className="text-sm font-bold text-foreground">
+                            {expense.paidBy}
+                          </span>
+                          <span className="ml-auto font-sans font-bold text-sm text-primary">
+                            {formatCurrency(expense.amount)}
+                          </span>
+                        </div>
+
+                        {/* Split among */}
+                        <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-3">
+                          <UserCheck size={12} className="text-emerald-600" />
+                          Included in split ({expense.splits.length})
+                        </div>
+                        <div className="space-y-1.5">
+                          {expense.splits.map((split) => (
+                            <div
+                              key={split.userId}
+                              className="flex items-center gap-3 clay-card-pressed px-3 py-2 rounded-xl"
+                            >
+                              <div className="size-7 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0">
+                                <span className="text-[11px] font-bold text-emerald-700">
+                                  {split.name.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                              <span className="text-sm font-semibold text-foreground">
+                                {split.name}
+                              </span>
+                              <span className="ml-auto font-sans font-bold text-sm text-foreground/80">
+                                {formatCurrency(split.amount)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Not included */}
+                        {(() => {
+                          const splitUserIds = new Set(expense.splits.map((s) => s.userId));
+                          const excluded = members.filter((m) => !splitUserIds.has(m.id));
+                          if (excluded.length === 0) return null;
+                          return (
+                            <>
+                              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-3">
+                                <UserX size={12} className="text-muted-foreground/60" />
+                                Not included ({excluded.length})
+                              </div>
+                              <div className="space-y-1.5">
+                                {excluded.map((member) => (
+                                  <div
+                                    key={member.id}
+                                    className="flex items-center gap-3 px-3 py-2 rounded-xl opacity-50"
+                                  >
+                                    <div className="size-7 rounded-full bg-muted/40 flex items-center justify-center shrink-0">
+                                      <span className="text-[11px] font-bold text-muted-foreground">
+                                        {member.initial}
+                                      </span>
+                                    </div>
+                                    <span className="text-sm font-medium text-muted-foreground">
+                                      {member.id === currentUserId ? "You" : member.name}
+                                    </span>
+                                    <span className="ml-auto text-xs font-medium text-muted-foreground">
+                                      —
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -493,6 +597,7 @@ export default function GroupDetailsPage() {
               currentUserId={currentUser?.id}
               onEditExpense={(expense) => setEditingExpense(expense)}
               onDeleteExpense={(expense) => setDeletingExpense(expense)}
+              members={group.members}
             />
           ) : activeTab === "balances" ? (
             <div className="space-y-8">
