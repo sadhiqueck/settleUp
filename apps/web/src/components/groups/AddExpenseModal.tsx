@@ -316,7 +316,7 @@ export function AddExpenseModal({
         }));
       } else {
         nextSplits = selectedMembers
-          .map((m) => {
+          .map((m): SplitItem => {
             const val = Number(splitValues[m.id]) || 0;
             const base = { userId: m.id };
             if (splitMethod === "EXACT") return { ...base, amount: val };

@@ -6,6 +6,7 @@ import { VpaOnboardingModal } from "./VpaOnboardingModal";
 
 export function ProtectedRoute() {
   const { data: user, isLoading, isError } = useUserProfile();
+  const localUser = localStorage.getItem("user");
 
   useEffect(() => {
     // Prevent Back/Forward Cache (bfcache) from showing stale protected pages
@@ -18,6 +19,12 @@ export function ProtectedRoute() {
     return () => window.removeEventListener("pageshow", handlePageShow);
   }, []);
 
+  // If there is no user in localStorage (e.g. they logged out), immediately redirect
+  // to login without waiting for any queries (prevents history back button stale state)
+  if (!localUser) {
+    return <Navigate to="/login" replace />;
+  }
+
   if (isLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
@@ -28,6 +35,8 @@ export function ProtectedRoute() {
 
   // If there's an error fetching the user (e.g., 401 Unauthorized), or no user data, redirect to login
   if (isError || !user) {
+    // Sync localStorage status
+    localStorage.removeItem("user");
     return <Navigate to="/login" replace />;
   }
 
@@ -42,6 +51,7 @@ export function ProtectedRoute() {
 
 export function PublicRoute() {
   const { data: user, isLoading } = useUserProfile();
+  const localUser = localStorage.getItem("user");
 
   if (isLoading) {
     return (
@@ -51,8 +61,8 @@ export function PublicRoute() {
     );
   }
 
-  // If user is already logged in, redirect them away from the public route (e.g., /login)
-  if (user) {
+  // If user is already logged in AND exists in localStorage, redirect them away from the public route (e.g., /login)
+  if (user && localUser) {
     return <Navigate to="/dashboard" replace />;
   }
 

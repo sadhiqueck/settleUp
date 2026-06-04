@@ -600,3 +600,20 @@ Individual splits are not "paid" — settlements operate at the user-to-user lev
 - Analytics charts
 - Receipt OCR / AI features
 - Push notifications
+
+
+# How SettleUp Can Beat GPay Split
+
+## GPay Split has serious limitations that are your opportunity:
+
+
+| GPay Split weaknesses                 | SettleUp advantage                   |
+|---------------------------------------|--------------------------------------|
+| Only works within GPay users          | Works for everyone — any UPI app     |
+| No expense categorization             | Full categories, receipts, notes     |
+| No split history / detailed tracking  | Complete expense history with splits |
+| No group management                   | Groups, invite codes, roles          |
+| Can only split equally                | Equal, percentage, exact, shares     |
+| No settlement optimization            | Greedy algorithm minimizes payments  |
+| Buried inside GPay's UI               | Dedicated app, purpose-built UX      |
+| No activity feed / audit trail        | Full activity log                    |

@@ -232,7 +232,7 @@ export default function ProfilePage() {
                   <button
                     onClick={handleSaveChanges}
                     disabled={
-                      updateProfileMutation.isPending || (name === user?.name && vpa === (user?.vpa || '')) || (vpa && !isVpaValid)
+                      Boolean(updateProfileMutation.isPending || (name === user?.name && vpa === (user?.vpa || '')) || (vpa && !isVpaValid))
                     }
                     className={`clay-btn-primary px-8 text-sm transition-all duration-200 ${
                       updateProfileMutation.isPending || (name === user?.name && vpa === (user?.vpa || '')) || (vpa && !isVpaValid)

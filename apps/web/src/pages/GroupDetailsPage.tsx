@@ -25,7 +25,7 @@ import {
   Trash2,
   ChevronDown,
 } from "lucide-react";
-import type { GroupExpense, GroupMember } from "@/hooks/useGroups";
+import type { GroupExpense } from "@/hooks/useGroups";
 import { useGroup, useLeaveGroup } from "@/hooks/useGroups";
 import type { AxiosError } from "axios";
 import { toast } from "sonner";
@@ -114,14 +114,12 @@ function ExpenseFeed({
   currentUserId,
   onEditExpense,
   onDeleteExpense,
-  members,
 }: {
   expenses: GroupExpense[];
   onAddExpense: () => void;
   currentUserId: string | undefined;
   onEditExpense: (expense: GroupExpense) => void;
   onDeleteExpense: (expense: GroupExpense) => void;
-  members: GroupMember[];
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const dateGroups = useMemo(
@@ -569,7 +567,6 @@ export default function GroupDetailsPage() {
               currentUserId={currentUser?.id}
               onEditExpense={(expense) => setEditingExpense(expense)}
               onDeleteExpense={(expense) => setDeletingExpense(expense)}
-              members={group.members}
             />
           ) : activeTab === "balances" ? (
             <div className="space-y-8">
