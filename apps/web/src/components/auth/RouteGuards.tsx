@@ -19,9 +19,9 @@ export function ProtectedRoute() {
     return () => window.removeEventListener("pageshow", handlePageShow);
   }, []);
 
-  // If there is no user in localStorage (e.g. they logged out), immediately redirect
-  // to login without waiting for any queries (prevents history back button stale state)
-  if (!localUser) {
+  // If there is no user in localStorage (e.g. they logged out) AND we aren't currently
+  // loading a fresh query, immediately redirect to login (prevents history back button stale state)
+  if (!localUser && !isLoading) {
     return <Navigate to="/login" replace />;
   }
 

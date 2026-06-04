@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { apiClient } from "@/lib/apiClient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { User, UpdateProfileInput } from "@settleup/shared";
@@ -13,12 +14,22 @@ async function updateUserProfile(payload: UpdateProfileInput): Promise<User> {
 }
 
 export function useUserProfile() {
-  return useQuery({
+  const query = useQuery({
     queryKey: ["user-profile"],
     queryFn: fetchUserProfile,
     staleTime: 1000 * 60 * 5,
     retry: false, // Do not retry on 401 errors so PublicRoute doesn't hang
   });
+
+  useEffect(() => {
+    if (query.data) {
+      localStorage.setItem("user", JSON.stringify(query.data));
+    } else if (query.isError) {
+      localStorage.removeItem("user");
+    }
+  }, [query.data, query.isError]);
+
+  return query;
 }
 
 export function useUpdateProfile() {
