@@ -442,7 +442,7 @@
   }
 
   .chat-list-search {
-    @apply mx-4 mt-4 mb-3 rounded-[1.25rem] px-4 py-2.5 text-sm outline-none border-0;
+    @apply rounded-[1.25rem] px-4 py-2.5 text-sm outline-none border-0;
     background: #F0EEF9;
     box-shadow: none;
   }

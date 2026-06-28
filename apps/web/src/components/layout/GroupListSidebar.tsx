@@ -55,10 +55,10 @@ export function GroupListSidebar({
       </div>
 
       {/* Search */}
-      <div className="relative mx-4 mb-2">
+      <div className="relative mx-4 mt-4 mb-3">
         <Search
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
-          size={15}
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+          size={16}
         />
         <input
           type="text"
