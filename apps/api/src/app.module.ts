@@ -8,6 +8,7 @@ import { AppService } from './app.service';
 import { ExpensesModule } from './expenses/expenses.module';
 import { UserModule } from './user/user.module';
 import { SettlementsModule } from './settlements/settlements.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { SettlementsModule } from './settlements/settlements.module';
     ExpensesModule,
     UserModule,
     SettlementsModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
