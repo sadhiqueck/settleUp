@@ -15,4 +15,8 @@ describe('ExpensesService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
+
+  it('should be an instance of ExpensesService', () => {
+    expect(service).toBeInstanceOf(ExpensesService);
+  });
 });
