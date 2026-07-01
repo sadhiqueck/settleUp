@@ -206,7 +206,7 @@ export class GroupsService {
         _sum: { amount: true },
       });
       const sumMap = new Map(
-        expenseSums.map((s) => [s.groupId, s._sum.amount || 0])
+        expenseSums.map((s) => [s.groupId, s._sum.amount || 0]),
       );
 
       return groupMemberships.map((membership) => {
