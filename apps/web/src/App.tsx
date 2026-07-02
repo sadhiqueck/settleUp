@@ -17,22 +17,28 @@ function App() {
       <Toaster richColors position="top-center" />
       <ErrorBoundary>
         <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-        <Route element={<PublicRoute />}>
-          <Route path="/login" element={<AuthPage />} />
-          <Route path="/register" element={<AuthPage />} />
-        </Route>
-
-        <Route element={<ProtectedRoute />}>
-          <Route element={<SocketProvider><ChatAppLayout /></SocketProvider>}>
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/groups/:id" element={<GroupDetailsPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route element={<PublicRoute />}>
+            <Route path="/login" element={<AuthPage />} />
+            <Route path="/register" element={<AuthPage />} />
           </Route>
-        </Route>
-      </Routes>
+
+          <Route element={<ProtectedRoute />}>
+            <Route
+              element={
+                <SocketProvider>
+                  <ChatAppLayout />
+                </SocketProvider>
+              }
+            >
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/groups/:id" element={<GroupDetailsPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/analytics" element={<AnalyticsPage />} />
+            </Route>
+          </Route>
+        </Routes>
       </ErrorBoundary>
     </ThemeProvider>
   );
