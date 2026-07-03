@@ -91,6 +91,7 @@ model User {
   activityLogs        ActivityLog[]
   notifications       Notification[]
   refreshTokens       RefreshToken[]
+  chatMessages        ChatMessage[]
 
   @@map("users")
 }
@@ -125,6 +126,7 @@ model Group {
   settlements Settlement[]
   balances    GroupMemberBalance[]
   activities  ActivityLog[]
+  chatMessages ChatMessage[]
 
   @@map("groups")
 }
@@ -270,4 +272,21 @@ model Notification {
   @@index([userId, isRead])
   @@index([createdAt])
   @@map("notifications")
+}
+
+// ─── Chat System ────────────────────────────────────────
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  groupId   String
+  userId    String
+  content   String
+  imageUrl  String?
+  createdAt DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([groupId, createdAt]) // Optimize query for loading chat history
+  @@map("chat_messages")
 }

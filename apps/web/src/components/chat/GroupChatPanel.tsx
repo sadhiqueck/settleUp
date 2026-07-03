@@ -11,6 +11,11 @@ import {
   Wallet,
   Info,
   ArrowLeft,
+  MessageCircle,
+  Plus,
+  Camera,
+  Image as ImageIcon,
+  Loader2,
 } from "lucide-react";
 import type { AxiosError } from "axios";
 import { toast } from "sonner";
@@ -35,71 +40,92 @@ import {
   ActivityBubble,
 } from "@/components/chat/ExpenseMessageBubble";
 import { formatCurrency, formatRelativeDate } from "@/lib/format";
+import { useChat, type ChatMessage } from "@/hooks/useChat";
+import { useUpload } from "@/hooks/useUpload";
+import { ChatImageBubble } from "@/components/chat/ChatImageBubble";
 
-type ChatView = "expenses" | "balances" | "activity";
+type ChatView = "feed" | "balances" | "activity";
 
 interface GroupChatPanelProps {
   group: GroupDetailsData;
 }
 
-function groupExpensesByDate(
-  expenses: GroupExpense[],
-): { label: string; expenses: GroupExpense[] }[] {
-  const groups = new Map<string, GroupExpense[]>();
-  const today = new Date();
-  for (const exp of expenses) {
-    const d = new Date(exp.date);
-    const isToday = d.toDateString() === today.toDateString();
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-    const isYesterday = d.toDateString() === yesterday.toDateString();
-    const label = isToday
-      ? "Today"
-      : isYesterday
-        ? "Yesterday"
-        : new Intl.DateTimeFormat("en-IN", {
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-          }).format(d);
-    if (!groups.has(label)) groups.set(label, []);
-    groups.get(label)!.push(exp);
-  }
-  return Array.from(groups.entries()).map(([label, exps]) => ({
-    label,
-    expenses: exps,
-  }));
-}
+
+
 
 export function GroupChatPanel({ group }: GroupChatPanelProps) {
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [chatView, setChatView] = useState<ChatView>("expenses");
+  const [chatView, setChatView] = useState<ChatView>("feed");
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<GroupExpense | null>(null);
   const [deletingExpense, setDeletingExpense] = useState<GroupExpense | null>(null);
   const [settlingPayment, setSettlingPayment] = useState<GroupSettlement | null>(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [chatInput, setChatInput] = useState("");
   const { data: currentUser } = useUserProfile();
   const leaveGroupMutation = useLeaveGroup();
+  
+  // File Upload
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { uploadFile, isUploading } = useUpload();
 
-  const sortedExpenses = useMemo(() => {
-    return [...(group.expenses ?? [])].reverse();
-  }, [group.expenses]);
+  // Real-time chat integration
+  const { messages, sendMessage } = useChat(group.id);
+
+  // Optimistic preview: show a local preview immediately while uploading
+  const [uploadPreview, setUploadPreview] = useState<string | null>(null);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Create a local preview URL immediately
+    const localPreview = URL.createObjectURL(file);
+    setUploadPreview(localPreview);
+    
+    try {
+      const fileUrl = await uploadFile(file);
+      sendMessage("", fileUrl);
+      toast.success("Image sent");
+    } catch (error) {
+      toast.error("Failed to upload image");
+    } finally {
+      setUploadPreview(null);
+      URL.revokeObjectURL(localPreview);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  // ─── Unified Feed: merge chat messages + expenses chronologically ───
+  type FeedItem =
+    | { type: 'chat'; data: ChatMessage; timestamp: number }
+    | { type: 'expense'; data: GroupExpense; timestamp: number };
+
+  const unifiedFeed = useMemo<FeedItem[]>(() => {
+    const chatItems: FeedItem[] = messages.map((msg) => ({
+      type: 'chat' as const,
+      data: msg,
+      timestamp: new Date(msg.createdAt).getTime(),
+    }));
+
+    const expenseItems: FeedItem[] = (group.expenses ?? []).map((exp) => ({
+      type: 'expense' as const,
+      data: exp,
+      timestamp: new Date(exp.date).getTime(),
+    }));
+
+    return [...chatItems, ...expenseItems].sort((a, b) => a.timestamp - b.timestamp);
+  }, [messages, group.expenses]);
 
   const sortedActivity = useMemo(() => {
     return [...(group.activity ?? [])].reverse();
   }, [group.activity]);
 
-  const dateGroups = useMemo(
-    () => groupExpensesByDate(sortedExpenses),
-    [sortedExpenses],
-  );
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [group.expenses, chatView]);
+  }, [unifiedFeed, chatView]);
 
   const onlineCount = Math.max(1, Math.floor(group.memberCount * 0.4));
 
@@ -183,7 +209,7 @@ export function GroupChatPanel({ group }: GroupChatPanelProps) {
       <div className="shrink-0 flex gap-1 px-6 py-2 border-b border-border/20 bg-[#fafbfc]">
         {(
           [
-            { id: "expenses" as const, label: "Expenses", icon: ClayReceiptIcon },
+            { id: "feed" as const, label: "Feed", icon: MessageCircle },
             { id: "balances" as const, label: "Balances", icon: ClayWalletIcon },
             { id: "activity" as const, label: "Activity", icon: Info },
           ] as const
@@ -204,38 +230,102 @@ export function GroupChatPanel({ group }: GroupChatPanelProps) {
       </div>
 
       {/* Messages / content area */}
-      <div className="chat-messages">
-        {chatView === "expenses" && (
+      <div className="chat-messages p-4 md:p-6 overflow-y-auto flex-1">
+        {chatView === "feed" && (
           <>
-            {(!group.expenses || group.expenses.length === 0) ? (
+            {unifiedFeed.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center py-16">
                 <div className="clay-card p-5 rounded-full mb-4">
-                  <ClayReceiptIcon size={40} className="text-muted-foreground opacity-50" />
+                  <MessageCircle size={40} className="text-muted-foreground opacity-50" />
                 </div>
-                <h3 className="font-display font-bold text-lg mb-1">No expenses yet</h3>
+                <h3 className="font-display font-bold text-lg mb-1">Start the conversation</h3>
                 <p className="text-sm text-muted-foreground max-w-xs">
-                  Add your first expense using the bar below — it will show up as a message in this thread.
+                  Send a message or add your first expense — everything shows up here in real-time.
                 </p>
               </div>
             ) : (
-              dateGroups.map((dg) => (
-                <div key={dg.label}>
-                  <div className="chat-date-divider">
-                    <span>{dg.label}</span>
-                  </div>
-                  <div className="space-y-4">
-                    {dg.expenses.map((expense) => (
+              <div className="space-y-4">
+                {unifiedFeed.map((item) => {
+                  if (item.type === 'expense') {
+                    return (
                       <ExpenseMessageBubble
-                        key={expense.id}
-                        expense={expense}
-                        isOwn={expense.paidById === currentUser?.id}
-                        onEdit={() => setEditingExpense(expense)}
-                        onDelete={() => setDeletingExpense(expense)}
+                        key={`expense-${item.data.id}`}
+                        expense={item.data}
+                        isOwn={item.data.paidById === currentUser?.id}
+                        onEdit={() => setEditingExpense(item.data)}
+                        onDelete={() => setDeletingExpense(item.data)}
+                        currentUserId={currentUser?.id}
+                        members={group.members}
                       />
-                    ))}
+                    );
+                  }
+
+                  // Chat message
+                  const msg = item.data;
+                  const isOwn = msg.user.id === currentUser?.id;
+                  const isImageOnly = msg.imageUrl && (!msg.content || !msg.content.trim());
+
+                  return (
+                    <div key={`chat-${msg.id}`} className={`flex items-end gap-2 ${isOwn ? "justify-end" : "justify-start"}`}>
+                      {!isOwn && (
+                        <Avatar className="size-6 shrink-0 mb-1">
+                          {msg.user.avatarUrl ? (
+                            <img src={msg.user.avatarUrl} alt={msg.user.name} />
+                          ) : (
+                            <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
+                              {msg.user.name.charAt(0)}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                      )}
+                      <div className={`max-w-[75%] relative rounded-2xl ${isImageOnly ? "p-1" : "px-4 py-2"} ${
+                        isOwn 
+                          ? "bg-primary text-primary-foreground rounded-br-sm" 
+                          : "bg-white border text-foreground rounded-bl-sm"
+                      }`}>
+                        {!isOwn && !isImageOnly && <p className="text-[10px] font-bold text-primary mb-0.5">{msg.user.name}</p>}
+                        
+                        {msg.imageUrl && (
+                          <div className={isImageOnly ? "" : "mb-2 -mx-2 -mt-1"}>
+                            <ChatImageBubble
+                              src={msg.imageUrl}
+                              isOwn={isOwn}
+                              senderName={msg.user.name}
+                            />
+                          </div>
+                        )}
+                        {msg.content && msg.content.trim() && (
+                          <p className="text-sm break-words">{msg.content}</p>
+                        )}
+                        <span className={`text-[10px] block text-right mt-1 ${isImageOnly ? "absolute bottom-2 right-3 text-white drop-shadow-md z-10 font-medium" : "opacity-70"}`}>
+                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Optimistic upload preview */}
+            {uploadPreview && (
+              <div className="flex items-end gap-2 justify-end">
+                <div className="max-w-[75%] rounded-2xl p-1 bg-primary text-primary-foreground rounded-br-sm relative">
+                  <div className="relative rounded-xl overflow-hidden">
+                    <img
+                      src={uploadPreview}
+                      alt="Uploading..."
+                      className="max-w-full h-auto object-cover opacity-60"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-8 h-8 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                        <span className="text-xs text-white font-medium drop-shadow-md">Uploading...</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              ))
+              </div>
             )}
           </>
         )}
@@ -326,27 +416,57 @@ export function GroupChatPanel({ group }: GroupChatPanelProps) {
       </div>
 
       {/* Input bar */}
-      {chatView === "expenses" && (
+      {chatView === "feed" && (
         <div className="chat-input-bar">
-          <button className="text-muted-foreground hover:text-foreground p-2 rounded-full hover:bg-soft-clay transition-colors">
-            <Paperclip size={20} />
+          <button
+            onClick={() => setIsAddExpenseOpen(true)}
+            className="text-primary hover:text-primary/80 p-2 rounded-full hover:bg-soft-clay transition-colors shrink-0"
+            title="Add expense manually"
+          >
+            <Plus size={22} />
           </button>
           <input
             type="text"
-            placeholder="Add an expense..."
-            readOnly
-            onClick={() => setIsAddExpenseOpen(true)}
-            className="chat-input-field cursor-pointer"
+            placeholder="Type a message..."
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && chatInput.trim()) {
+                sendMessage(chatInput.trim());
+                setChatInput("");
+              }
+            }}
+            className="chat-input-field"
           />
-          <button className="text-muted-foreground hover:text-foreground p-2 rounded-full hover:bg-soft-clay transition-colors">
-            <Mic size={20} />
-          </button>
-          <button
-            onClick={() => setIsAddExpenseOpen(true)}
-            className="chat-send-btn"
-          >
-            <Send size={18} />
-          </button>
+          <div className="flex items-center gap-2 pr-1 shrink-0">
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleImageUpload} 
+              accept="image/*" 
+              className="hidden" 
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="text-primary bg-primary/10 hover:bg-primary/20 p-2 rounded-full transition-colors flex items-center justify-center hover:scale-105 active:scale-95 disabled:opacity-50"
+              title="Send image"
+            >
+              {isUploading ? <Loader2 size={20} className="animate-spin" /> : <ImageIcon size={20} />}
+            </button>
+            <button
+              onClick={() => {
+                if (chatInput.trim()) {
+                  sendMessage(chatInput.trim());
+                  setChatInput("");
+                }
+              }}
+              disabled={!chatInput.trim()}
+              className="chat-send-btn disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed"
+            >
+              <Send size={18} />
+            </button>
+          </div>
         </div>
       )}
 

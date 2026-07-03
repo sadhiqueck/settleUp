@@ -3,6 +3,7 @@ import { Outlet, useParams, useLocation } from "react-router-dom";
 import { Loader2, AlertCircle } from "lucide-react";
 import { NavRail, type NavFilter } from "@/components/layout/NavRail";
 import { GroupListSidebar } from "@/components/layout/GroupListSidebar";
+import { ProfileSidebar } from "@/components/layout/ProfileSidebar";
 import { GroupInfoSidebar } from "@/components/layout/GroupInfoSidebar";
 import { useGroups, useCreateGroup, useJoinGroup, useGroup } from "@/hooks/useGroups";
 import {
@@ -21,7 +22,6 @@ import {
   ClayPlusIcon,
   ClayLinkIcon,
 } from "@/components/clay-icons";
-import { SocketDebug } from "../debug/SocketDebug";
 
 const CATEGORIES = [
   { label: "Travel", value: "TRIP" },
@@ -110,16 +110,20 @@ export function ChatAppLayout() {
         />
 
         <div className="chat-middle-container">
-          <GroupListSidebar
-            className={hideGroupList ? "hidden md:flex" : "flex"}
-            groups={filteredGroups}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            isLoading={isLoading}
-            onJoinGroup={() => setJoinOpen(true)}
-          />
+          {location.pathname === "/profile" ? (
+            <ProfileSidebar className={hideGroupList ? "hidden md:flex" : "flex"} />
+          ) : (
+            <GroupListSidebar
+              className={hideGroupList ? "hidden md:flex" : "flex"}
+              groups={filteredGroups}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              isLoading={isLoading}
+              onJoinGroup={() => setJoinOpen(true)}
+            />
+          )}
 
-          <div className={`flex-1 flex flex-col min-w-0 overflow-hidden ${!hideGroupList ? "hidden md:flex" : "flex"}`}>
+          <div className={`flex-1 flex flex-col min-w-0 overflow-hidden ${!hideGroupList && location.pathname !== "/profile" ? "hidden md:flex" : "flex"}`}>
             {isError ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8">
                 <AlertCircle size={48} className="text-coral-red" />
@@ -251,7 +255,6 @@ export function ChatAppLayout() {
           inviteCode={activeGroup.inviteCode}
         />
       )}
-<SocketDebug />
     </div>
   );
 }

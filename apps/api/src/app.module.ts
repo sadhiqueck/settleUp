@@ -10,6 +10,7 @@ import { UserModule } from './user/user.module';
 import { SettlementsModule } from './settlements/settlements.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { ChatModule } from './chat/chat.module';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ChatModule } from './chat/chat.module';
     SettlementsModule,
     AnalyticsModule,
     ChatModule,
+    UploadsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

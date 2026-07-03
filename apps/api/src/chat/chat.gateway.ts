@@ -17,7 +17,17 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @WebSocketGateway({
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: (origin: string, callback: any) => {
+      const allowed = ['http://localhost:5173'];
+      if (process.env.FRONTEND_URL) allowed.push(process.env.FRONTEND_URL);
+      
+      // Allow if origin is in allowed list, or if it's undefined (e.g. Postman)
+      if (!origin || allowed.includes(origin) || allowed.includes(origin.replace(/\/$/, ''))) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Not allowed by CORS: ${origin}`));
+      }
+    },
     credentials: true,
   },
 })
@@ -100,6 +110,85 @@ export class ChatGateway
         timestamp: new Date().toISOString(),
       },
     };
+  }
+
+  // ─── Room Management ──────────────────────────────────
+  
+  @UseGuards(WsJwtGuard)
+  @SubscribeMessage('joinGroup')
+  async handleJoinGroup(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('groupId') groupId: string,
+  ) {
+    // Verify the user is actually a member of this group
+    const isMember = await this.prisma.groupMember.findUnique({
+      where: {
+        userId_groupId: { userId: client.data.user.id, groupId },
+      },
+    });
+
+    if (!isMember) {
+      return { status: 'error', message: 'Not a member of this group' };
+    }
+
+    // Join the Socket.io room specific to this group
+    const roomName = `group_${groupId}`;
+    client.join(roomName);
+    this.logger.log(`${client.data.user.name} joined room: ${roomName}`);
+    
+    // Fetch recent 50 messages
+    const history = await this.prisma.chatMessage.findMany({
+      where: { groupId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      include: { user: { select: { id: true, name: true, avatarUrl: true } } },
+    });
+
+    // Send history to the client who just joined
+    client.emit('chatHistory', history.reverse());
+
+    return { status: 'success', room: roomName };
+  }
+
+  @UseGuards(WsJwtGuard)
+  @SubscribeMessage('leaveGroup')
+  handleLeaveGroup(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('groupId') groupId: string,
+  ) {
+    const roomName = `group_${groupId}`;
+    client.leave(roomName);
+    this.logger.log(`${client.data.user.name} left room: ${roomName}`);
+  }
+
+  // ─── Messaging ────────────────────────────────────────
+
+  @UseGuards(WsJwtGuard)
+  @SubscribeMessage('sendMessage')
+  async handleSendMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { groupId: string; content: string; imageUrl?: string },
+  ) {
+    const user = client.data.user;
+
+    // 1. Save message to database
+    const message = await this.prisma.chatMessage.create({
+      data: {
+        groupId: payload.groupId,
+        userId: user.id,
+        content: payload.content,
+        imageUrl: payload.imageUrl,
+      },
+      include: {
+        user: { select: { id: true, name: true, avatarUrl: true } }
+      }
+    });
+
+    // 2. Broadcast to everyone in the room (including the sender)
+    const roomName = `group_${payload.groupId}`;
+    this.server.to(roomName).emit('newMessage', message);
+
+    return { status: 'delivered' };
   }
 
   // ─── Helper: Extract token from handshake ───────────

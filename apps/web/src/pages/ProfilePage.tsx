@@ -73,14 +73,7 @@ export default function ProfilePage() {
             <div className="h-4 bg-zinc-100 rounded w-1/4" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-6">
-            {/* Sidebar tabs skeleton */}
-            <div className="space-y-2 animate-pulse">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-14 bg-zinc-50 rounded-2xl" />
-              ))}
-            </div>
-
+          <div className="flex flex-col gap-6">
             {/* Form card skeleton */}
             <div className="chat-info-card p-6 space-y-6 animate-pulse">
               <div className="h-6 bg-zinc-200 rounded w-1/4" />
@@ -146,23 +139,8 @@ export default function ProfilePage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-6">
-          <div className="space-y-2">
-            <button className="flex items-center gap-3 w-full chat-info-card p-4 text-left font-display font-bold text-sm bg-primary text-primary-foreground">
-              <UserIcon size={18} /> Personal info
-            </button>
-            <button className="flex items-center gap-3 w-full chat-info-card p-4 text-left font-display font-bold text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <Bell size={18} /> Notifications
-            </button>
-            <button className="flex items-center gap-3 w-full chat-info-card p-4 text-left font-display font-bold text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <Key size={18} /> Security
-            </button>
-            <button className="flex items-center gap-3 w-full chat-info-card p-4 text-left font-display font-bold text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <Settings size={18} /> Preferences
-            </button>
-          </div>
-
-          <Card className="chat-info-card border-0 ring-0 h-full p-0 shadow-none">
+        <div className="flex flex-col gap-6">
+          <Card className="chat-info-card border-0 ring-0 p-0 shadow-none">
             <CardHeader className="pb-4 pt-6 px-6">
               <CardTitle className="font-display text-xl font-bold flex items-center gap-2">
                 <UserIcon size={20} className="text-primary" /> Edit details
@@ -239,7 +217,7 @@ export default function ProfilePage() {
 
         <button
           onClick={() => logoutMutation.mutate()}
-          className="w-full chat-info-card mt-6 p-5 flex justify-center items-center gap-2 font-display font-bold text-destructive hover:scale-[1.01] transition-transform cursor-pointer"
+          className="w-full chat-info-card mt-6 p-5 flex justify-center items-center gap-2 font-display font-bold text-destructive hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
         >
           <LogOut size={18} /> Log out
         </button>

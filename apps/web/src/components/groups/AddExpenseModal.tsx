@@ -27,8 +27,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ClayReceiptIcon } from "@/components/clay-icons";
-import { Loader2, Check, Users } from "lucide-react";
+import { Loader2, Check, Users, ImagePlus, Trash2 } from "lucide-react";
 import { useAddExpense } from "@/hooks/useExpense";
+import { useUpload } from "@/hooks/useUpload";
 import { useUserProfile } from "@/hooks/useUser";
 import type { GroupMember } from "@/hooks/useGroups";
 
@@ -67,6 +68,8 @@ export function AddExpenseModal({
 }: AddExpenseModalProps) {
   const { data: user } = useUserProfile();
   const { mutate: addExpense, isPending } = useAddExpense(groupId);
+  const { uploadFile, isUploading } = useUpload();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -85,6 +88,7 @@ export function AddExpenseModal({
       category: "OTHER",
       splitMethod: "EQUAL",
       date: new Date().toISOString(),
+      receiptUrl: undefined,
       splits: [],
     },
   });
@@ -380,7 +384,21 @@ export function AddExpenseModal({
     });
   };
 
+  const handleReceiptUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const url = await uploadFile(file);
+      setValue("receiptUrl", url, { shouldValidate: true });
+    } catch (error) {
+      // Handled by useUpload hook visually via maybe a toast, or we can just ignore
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const allSelected = selectedMemberIds.size === members.length;
+  const currentReceiptUrl = useWatch({ control, name: "receiptUrl" });
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -423,6 +441,44 @@ export function AddExpenseModal({
               <span className="text-red-500 text-xs">
                 {errors.title.message}
               </span>
+            )}
+          </div>
+
+          {/* Receipt Upload */}
+          <div className="flex flex-col gap-2">
+            <Label className="font-display font-bold text-sm">Receipt Image</Label>
+            {currentReceiptUrl ? (
+              <div className="relative rounded-2xl overflow-hidden border border-primary/20 aspect-video bg-soft-clay flex items-center justify-center">
+                <img src={currentReceiptUrl} alt="Receipt" className="max-w-full max-h-full object-contain" />
+                <button
+                  type="button"
+                  onClick={() => setValue("receiptUrl", undefined, { shouldValidate: true })}
+                  className="absolute top-2 right-2 p-1.5 bg-background/80 hover:bg-background rounded-full text-red-500 transition-colors"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ) : (
+              <div 
+                onClick={() => !isUploading && fileInputRef.current?.click()}
+                className={`clay-card border border-dashed border-primary/30 h-24 flex flex-col items-center justify-center cursor-pointer hover:bg-soft-clay transition-colors ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleReceiptUpload} 
+                  accept="image/*" 
+                  className="hidden" 
+                />
+                {isUploading ? (
+                  <Loader2 size={24} className="text-primary animate-spin" />
+                ) : (
+                  <>
+                    <ImagePlus size={24} className="text-primary/70 mb-2" />
+                    <span className="text-xs text-primary/70 font-medium">Click to attach receipt</span>
+                  </>
+                )}
+              </div>
             )}
           </div>
 

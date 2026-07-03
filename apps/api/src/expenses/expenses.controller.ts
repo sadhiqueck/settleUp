@@ -16,20 +16,31 @@ import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { createExpenseSchema, updateExpenseSchema } from '@settleup/shared';
 import type { CreateExpenseInput, UpdateExpenseInput } from '@settleup/shared';
 import { GetUser } from '../common/decorators/get-user.decorator';
+import { ChatGateway } from '../chat/chat.gateway';
 
 @Controller('groups/:groupId/expenses')
 @UseGuards(JwtAuthGuard)
 export class ExpensesController {
-  constructor(private readonly expensesService: ExpensesService) {}
+  constructor(
+    private readonly expensesService: ExpensesService,
+    private readonly chatGateway: ChatGateway,
+  ) {}
 
   @Post()
   @UsePipes(new ZodValidationPipe(createExpenseSchema))
-  addExpense(
+  async addExpense(
     @Param('groupId') groupId: string,
     @GetUser('id') userId: string,
     @Body() body: CreateExpenseInput,
   ) {
-    return this.expensesService.addExpense(userId, groupId, body);
+    const result = await this.expensesService.addExpense(userId, groupId, body);
+
+    // Broadcast to all connected group members via WebSocket
+    this.chatGateway.server
+      .to(`group_${groupId}`)
+      .emit('expense:created', { groupId });
+
+    return result;
   }
 
   @Patch(':expenseId')
@@ -49,7 +60,14 @@ export class ExpensesController {
       throw new ForbiddenException('You can only edit your own expenses');
     }
 
-    return this.expensesService.updateExpense(expenseId, body);
+    const result = await this.expensesService.updateExpense(expenseId, body);
+
+    // Broadcast update to all connected group members
+    this.chatGateway.server
+      .to(`group_${groupId}`)
+      .emit('expense:updated', { groupId });
+
+    return result;
   }
 
   @Delete(':expenseId')
@@ -67,6 +85,13 @@ export class ExpensesController {
       throw new ForbiddenException('You can only delete your own expenses');
     }
 
-    return this.expensesService.deleteExpense(expenseId);
+    const result = await this.expensesService.deleteExpense(expenseId);
+
+    // Broadcast deletion to all connected group members
+    this.chatGateway.server
+      .to(`group_${groupId}`)
+      .emit('expense:deleted', { groupId });
+
+    return result;
   }
 }

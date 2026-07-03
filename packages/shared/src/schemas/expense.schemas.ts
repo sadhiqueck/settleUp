@@ -8,7 +8,9 @@ const splitSchema = z.object({
 })
 
 export const createExpenseSchema = z.object({
-  title: z.string().min(1).max(100),
+  title: z.string().min(1, "Title is required").max(100, "Title is too long").refine((val) => val.trim().split(/\s+/).length <= 5, {
+    message: "Title must be 5 words or less",
+  }),
   amount: z.number().positive(),
   paidById: z.string(),
   category: z
