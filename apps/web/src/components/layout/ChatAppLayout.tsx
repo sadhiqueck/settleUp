@@ -21,6 +21,7 @@ import {
   ClayPlusIcon,
   ClayLinkIcon,
 } from "@/components/clay-icons";
+import { SocketDebug } from "../debug/SocketDebug";
 
 const CATEGORIES = [
   { label: "Travel", value: "TRIP" },
@@ -250,6 +251,7 @@ export function ChatAppLayout() {
           inviteCode={activeGroup.inviteCode}
         />
       )}
+<SocketDebug />
     </div>
   );
 }

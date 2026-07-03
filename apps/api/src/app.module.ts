@@ -9,6 +9,7 @@ import { ExpensesModule } from './expenses/expenses.module';
 import { UserModule } from './user/user.module';
 import { SettlementsModule } from './settlements/settlements.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     UserModule,
     SettlementsModule,
     AnalyticsModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

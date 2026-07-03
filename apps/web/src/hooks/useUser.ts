@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { apiClient } from "@/lib/apiClient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { User, UpdateProfileInput } from "@settleup/shared";
+import { disconnectSocket } from "@/lib/socket";
 
 async function fetchUserProfile(): Promise<User> {
   const { data } = await apiClient.get<User>("/users/me");
@@ -54,6 +55,7 @@ export function useLogout() {
   return useMutation({
     mutationFn: logoutUser,
     onSuccess: () => {
+      disconnectSocket();
       // Clear all cached data
       queryclient.clear();
       // Clear localStorage if any leftovers exist

@@ -104,11 +104,24 @@ export class ChatGateway
 
   // ─── Helper: Extract token from handshake ───────────
   private extractTokenFromHandshake(client: Socket): string | null {
-    // Method 1: From the `auth` object (secure, recommended)
+    // Method 1: From the `auth` object (most reliable)
     const authToken = client.handshake.auth?.token;
     if (authToken) return authToken;
 
-    // Method 2: From query parameter (useful for testing)
+    // Method 2: From cookies (works because frontend sends withCredentials: true)
+    // The handshake is an HTTP request, so cookies are available!
+    const cookies = client.handshake.headers?.cookie;
+    if (cookies) {
+      const authCookie = cookies
+        .split(';')
+        .map((c) => c.trim())
+        .find((c) => c.startsWith('auth_token='));
+      if (authCookie) {
+        return authCookie.split('=')[1];
+      }
+    }
+
+    // Method 3: From query parameter (for testing only)
     const queryToken = client.handshake.query?.token as string;
     if (queryToken) return queryToken;
 

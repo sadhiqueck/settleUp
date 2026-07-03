@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   app.enableCors({
     origin: 'http://localhost:5173', // Adjust to your frontend domain in production
     credentials: true,
@@ -13,12 +13,19 @@ async function bootstrap() {
 
   // Global middleware to prevent browser caching of API responses (security best practice)
   app.use((req: any, res: any, next: any) => {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate',
+    );
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     next();
   });
 
   await app.listen(process.env.PORT ?? 3000);
+  console.log(`🚀 API running on http://localhost:${process.env.PORT ?? 3000}`);
+  console.log(
+    `💬 WebSocket available on ws://localhost:${process.env.PORT ?? 3000}`,
+  );
 }
 bootstrap();

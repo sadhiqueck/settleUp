@@ -16,37 +16,72 @@ export class WsJwtGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // ─── 1. Get the Socket client from the WebSocket context ──
     const client: Socket = context.switchToWs().getClient();
 
-    // ─── 2. Check if user was already authenticated during connection ─
+    // ─── 1. Already Authenticated ─────────────────────────────────
+    // If handleConnection already set the user, trust it and proceed.
+    // Re-verifying the JWT signature on every single WebSocket message 
+    // is a massive performance bottleneck.
     if (client.data?.user) {
-      // User was authenticated in handleConnection — still valid
-      // But let's verify the token hasn't expired since connection
-      const token =
-        client.handshake.auth?.token ||
-        (client.handshake.query?.token as string);
+      return true;
+    }
 
-      if (token) {
-        try {
-          await this.jwtService.verifyAsync(token, {
-            secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-          });
-          return true; // Token still valid
-        } catch {
-          // Token expired since the user connected
-          this.logger.warn(
-            `Token expired for ${client.data.user.name} (${client.id})`,
-          );
-          client.emit('error', { message: 'Token expired. Please reconnect.' });
-          client.disconnect();
-          throw new WsException('Token expired');
-        }
+    // ─── 2. Race Condition Fallback ───────────────────────────────
+    // Because handleConnection is async, a client might emit an event 
+    // immediately upon connecting, before handleConnection finishes.
+    // If client.data.user is missing, we authenticate them right here.
+    const token = this.extractTokenFromHandshake(client);
+
+    if (!token) {
+      this.logger.warn(`Unauthenticated event attempt (${client.id})`);
+      throw new WsException('Authentication required');
+    }
+
+    try {
+      const payload = await this.jwtService.verifyAsync(token, {
+        secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+      });
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { id: true, name: true, email: true },
+      });
+
+      if (!user) {
+        throw new WsException('User not found');
+      }
+
+      // Cache it so future events skip this DB/crypto overhead
+      client.data.user = user;
+      return true;
+    } catch (error) {
+      this.logger.warn(`Invalid token during event (${client.id})`);
+      throw new WsException('Invalid or expired token');
+    }
+  }
+
+  /**
+   * Helper to extract the token, identical to the Gateway's method.
+   * Supports auth object, HTTP cookies, and query params.
+   */
+  private extractTokenFromHandshake(client: Socket): string | null {
+    const authToken = client.handshake.auth?.token;
+    if (authToken) return authToken;
+
+    const cookies = client.handshake.headers?.cookie;
+    if (cookies) {
+      const authCookie = cookies
+        .split(';')
+        .map((c) => c.trim())
+        .find((c) => c.startsWith('auth_token='));
+      if (authCookie) {
+        return authCookie.split('=')[1];
       }
     }
 
-    // ─── 3. No user data — wasn't authenticated during connection ──
-    this.logger.warn(`Unauthenticated event attempt (${client.id})`);
-    throw new WsException('Authentication required');
+    const queryToken = client.handshake.query?.token as string;
+    if (queryToken) return queryToken;
+
+    return null;
   }
 }

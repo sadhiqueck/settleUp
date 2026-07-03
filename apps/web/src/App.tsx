@@ -7,6 +7,7 @@ import ProfilePage from "./pages/ProfilePage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import { ProtectedRoute, PublicRoute } from "./components/auth/RouteGuards";
 import { ChatAppLayout } from "./components/layout/ChatAppLayout";
+import { SocketProvider } from "./context/SocketContext";
 
 function App() {
   return (
@@ -21,7 +22,7 @@ function App() {
         </Route>
 
         <Route element={<ProtectedRoute />}>
-          <Route element={<ChatAppLayout />}>
+          <Route element={<SocketProvider><ChatAppLayout /></SocketProvider>}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/groups/:id" element={<GroupDetailsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
