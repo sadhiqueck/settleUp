@@ -8,7 +8,12 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import type { RegisterInput, LoginInput } from '@settleup/shared';
-import type { Profile } from 'passport-google-oauth20';
+export interface GoogleProfile {
+  id: string;
+  displayName: string;
+  emails?: { value: string }[];
+  photos?: { value: string }[];
+}
 import { decryptVpaSafe } from '../common/utils/encryption';
 
 @Injectable()
@@ -62,7 +67,7 @@ export class AuthService {
     return this.generateTokens(user);
   }
 
-  async googleLogin(profile: Profile) {
+  async googleLogin(profile: GoogleProfile) {
     if (!profile) {
       throw new UnauthorizedException('No user from google');
     }

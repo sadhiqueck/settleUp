@@ -27,8 +27,10 @@ export class GroupRoleGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
-    const user = request.user;
+    const request = context
+      .switchToHttp()
+      .getRequest<import('express').Request>();
+    const user = request.user as { id: string } | undefined;
     // Support both :groupId (expenses/settlements) and :id (groups)
     const groupId = request.params.groupId || request.params.id;
 
