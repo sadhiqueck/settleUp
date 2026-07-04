@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { WsException } from '@nestjs/websockets';
@@ -19,15 +24,12 @@ export class WsJwtGuard implements CanActivate {
     const client: Socket = context.switchToWs().getClient();
 
     // ─── 1. Already Authenticated ─────────────────────────────────
-    // If handleConnection already set the user, trust it and proceed.
-    // Re-verifying the JWT signature on every single WebSocket message 
-    // is a massive performance bottleneck.
     if (client.data?.user) {
       return true;
     }
 
     // ─── 2. Race Condition Fallback ───────────────────────────────
-    // Because handleConnection is async, a client might emit an event 
+    // Because handleConnection is async, a client might emit an event
     // immediately upon connecting, before handleConnection finishes.
     // If client.data.user is missing, we authenticate them right here.
     const token = this.extractTokenFromHandshake(client);

@@ -10,7 +10,8 @@ WORKDIR /app
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
-COPY packages/shared/package.json packages/shared/
+COPY packages/shared/ packages/shared/
+COPY apps/api/prisma/ apps/api/prisma/
 
 # Install dependencies (respecting the workspace)
 RUN pnpm install
@@ -24,4 +25,4 @@ RUN pnpm --filter @settleup/api exec prisma generate
 EXPOSE 3000
 
 # Start NestJS development server
-CMD ["pnpm", "--filter", "@settleup/api", "start:dev"]
+CMD ["pnpm", "--filter", "@settleup/api", "dev"]

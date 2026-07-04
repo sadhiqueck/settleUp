@@ -23,6 +23,7 @@ services:
       - "3000:3000"
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/settleup?schema=public
+      - FRONTEND_URL=https://app.sqck.online
     depends_on:
       postgres:
         condition: service_healthy
@@ -31,7 +32,7 @@ services:
     #   - /app/node_modules # (Keeps the container's node_modules safe)
 
     # We override the CMD to ensure the database is seeded/pushed before starting the NestJS server.
-    command: sh -c "pnpm --filter @settleup/api exec prisma db push && pnpm --filter @settleup/api start:dev"
+    command: sh -c "pnpm --filter @settleup/api exec prisma db push && pnpm --filter @settleup/api dev"
 
   web:
     build:
@@ -40,12 +41,22 @@ services:
     ports:
       - "5173:5173"
     environment:
-      - VITE_API_URL=http://localhost:3000
+      - VITE_API_URL=https://api.sqck.online/
     depends_on:
       - api
     # volumes:
     #   - .:/app
     #   - /app/node_modules
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    depends_on:
+      - web
+      - api
 
 volumes:
   db-data:

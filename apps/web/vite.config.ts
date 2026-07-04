@@ -14,6 +14,9 @@ export default defineConfig({
       ),
     },
   },
+  server: {
+    allowedHosts: true,
+  },
   optimizeDeps: {
     include: ['@settleup/shared'],
   },
