@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -12,9 +12,9 @@ export const apiClient = axios.create({
 
 // Flag to prevent multiple concurrent refresh requests
 let isRefreshing = false;
-let failedQueue: Array<{ resolve: (value?: unknown) => void; reject: (reason?: any) => void }> = [];
+let failedQueue: Array<{ resolve: (value?: unknown) => void; reject: (reason?: Error | AxiosError) => void }> = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: Error | AxiosError | null, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
@@ -28,8 +28,9 @@ const processQueue = (error: any, token: string | null = null) => {
 
 apiClient.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  async (error: AxiosError) => {
+    const originalRequest = error.config as any; // Using any for InternalAxiosRequestConfig to allow _retry flag
+    if (!originalRequest) return Promise.reject(error);
 
     // If error is 401 and we haven't already retried this request, and it's not the refresh endpoint itself
     if (
@@ -63,8 +64,8 @@ apiClient.interceptors.response.use(
         
         // Retry the original request
         return apiClient(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError);
+      } catch (refreshError: unknown) {
+        processQueue(refreshError instanceof Error ? refreshError : new Error(String(refreshError)));
         
         // Refresh failed (e.g. refresh token expired), redirect to login
         // Alternatively, your AuthProvider could handle this, but for now we throw

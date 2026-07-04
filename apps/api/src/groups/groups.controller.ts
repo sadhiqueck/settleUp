@@ -6,6 +6,7 @@ import {
   UsePipes,
   UseGuards,
   Param,
+  BadRequestException,
 } from '@nestjs/common';
 import { GroupsService } from './groups.service';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
@@ -73,7 +74,7 @@ export class GroupsController {
     @GetUser('id') userId: string,
   ) {
     if (!inviteCode) {
-      throw new Error('Invite code is required');
+      throw new BadRequestException('Invite code is required');
     }
     return this.groupsService.joinGroupUsingCode(userId, inviteCode);
   }
@@ -101,7 +102,7 @@ export class GroupsController {
     @GetUser('id') adminId: string,
   ) {
     if (!memberId) {
-      throw new Error('User ID is required');
+      throw new BadRequestException('User ID is required');
     }
     return this.groupsService.addMemberDirectly(adminId, groupId, memberId);
   }
@@ -115,7 +116,7 @@ export class GroupsController {
     @GetUser('id') adminId: string,
   ) {
     if (!email) {
-      throw new Error('Email is required');
+      throw new BadRequestException('Email is required');
     }
     return this.groupsService.addMemberByEmail(adminId, groupId, email);
   }

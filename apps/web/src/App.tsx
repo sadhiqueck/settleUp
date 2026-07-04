@@ -8,12 +8,14 @@ import AnalyticsPage from "./pages/AnalyticsPage";
 import { ProtectedRoute, PublicRoute } from "./components/auth/RouteGuards";
 import { ChatAppLayout } from "./components/layout/ChatAppLayout";
 import { SocketProvider } from "./context/SocketContext";
+import { ErrorBoundary } from "./components/layout/ErrorBoundary";
 
 function App() {
   return (
     <>
       <Toaster richColors position="top-center" />
-      <Routes>
+      <ErrorBoundary>
+        <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
         <Route element={<PublicRoute />}>
@@ -30,6 +32,7 @@ function App() {
           </Route>
         </Route>
       </Routes>
+      </ErrorBoundary>
     </>
   );
 }

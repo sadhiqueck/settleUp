@@ -23,7 +23,7 @@ function getEncryptionKey(): Buffer {
   if (!hex || hex.length !== 64) {
     throw new Error(
       'VPA_ENCRYPTION_KEY must be set as a 64-character hex string (32 bytes). ' +
-        'Generate one with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"',
+        "Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"",
     );
   }
   return Buffer.from(hex, 'hex');
@@ -78,7 +78,9 @@ export function decryptVpa(ciphertext: string): string {
  * Safely decrypt a VPA value that may be null, undefined, or already plaintext.
  * Returns decrypted VPA or null.
  */
-export function decryptVpaSafe(value: string | null | undefined): string | null {
+export function decryptVpaSafe(
+  value: string | null | undefined,
+): string | null {
   if (!value) return null;
 
   // Encrypted values always have the iv:authTag:ciphertext format

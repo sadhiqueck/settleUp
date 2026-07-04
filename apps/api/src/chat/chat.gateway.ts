@@ -12,17 +12,30 @@ import { Logger, UseGuards } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Server, Socket } from 'socket.io';
+
+export interface AuthSocket extends Socket {
+  data: {
+    user?: { id: string; name: string; email: string };
+  };
+}
 import { WsJwtGuard } from './guards/ws-jwt.guard';
 import { PrismaService } from '../prisma/prisma.service';
 
 @WebSocketGateway({
   cors: {
-    origin: (origin: string, callback: any) => {
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
       const allowed = ['http://localhost:5173'];
       if (process.env.FRONTEND_URL) allowed.push(process.env.FRONTEND_URL);
-      
+
       // Allow if origin is in allowed list, or if it's undefined (e.g. Postman)
-      if (!origin || allowed.includes(origin) || allowed.includes(origin.replace(/\/$/, ''))) {
+      if (
+        !origin ||
+        allowed.includes(origin) ||
+        allowed.includes(origin.replace(/\/$/, ''))
+      ) {
         callback(null, true);
       } else {
         callback(new Error(`Not allowed by CORS: ${origin}`));
@@ -37,7 +50,7 @@ export class ChatGateway
   private readonly logger = new Logger(ChatGateway.name);
 
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   constructor(
     private readonly jwtService: JwtService,
@@ -51,7 +64,7 @@ export class ChatGateway
   }
 
   // ─── Lifecycle: Client connects ─────────────────────
-  async handleConnection(client: Socket) {
+  async handleConnection(client: AuthSocket) {
     try {
       // Extract the token from the handshake
       const token = this.extractTokenFromHandshake(client);
@@ -93,7 +106,7 @@ export class ChatGateway
   }
 
   // ─── Lifecycle: Client disconnects ──────────────────
-  handleDisconnect(client: Socket) {
+  handleDisconnect(client: AuthSocket) {
     const userName = client.data?.user?.name || 'Unknown';
     this.logger.log(`❌ Disconnected: ${userName} (${client.id})`);
   }
@@ -101,8 +114,8 @@ export class ChatGateway
   // ─── Test event: Ping/Pong ──────────────────────────
   @UseGuards(WsJwtGuard)
   @SubscribeMessage('ping')
-  handlePing(@ConnectedSocket() client: Socket) {
-    const user = client.data.user;
+  handlePing(@ConnectedSocket() client: AuthSocket) {
+    const user = client.data.user!;
     return {
       event: 'pong',
       data: {
@@ -113,17 +126,17 @@ export class ChatGateway
   }
 
   // ─── Room Management ──────────────────────────────────
-  
+
   @UseGuards(WsJwtGuard)
   @SubscribeMessage('joinGroup')
   async handleJoinGroup(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthSocket,
     @MessageBody('groupId') groupId: string,
   ) {
     // Verify the user is actually a member of this group
     const isMember = await this.prisma.groupMember.findUnique({
       where: {
-        userId_groupId: { userId: client.data.user.id, groupId },
+        userId_groupId: { userId: client.data.user!.id, groupId },
       },
     });
 
@@ -133,9 +146,9 @@ export class ChatGateway
 
     // Join the Socket.io room specific to this group
     const roomName = `group_${groupId}`;
-    client.join(roomName);
-    this.logger.log(`${client.data.user.name} joined room: ${roomName}`);
-    
+    void client.join(roomName);
+    this.logger.log(`${client.data.user!.name} joined room: ${roomName}`);
+
     // Fetch recent 50 messages
     const history = await this.prisma.chatMessage.findMany({
       where: { groupId },
@@ -153,12 +166,12 @@ export class ChatGateway
   @UseGuards(WsJwtGuard)
   @SubscribeMessage('leaveGroup')
   handleLeaveGroup(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthSocket,
     @MessageBody('groupId') groupId: string,
   ) {
     const roomName = `group_${groupId}`;
-    client.leave(roomName);
-    this.logger.log(`${client.data.user.name} left room: ${roomName}`);
+    void client.leave(roomName);
+    this.logger.log(`${client.data.user!.name} left room: ${roomName}`);
   }
 
   // ─── Messaging ────────────────────────────────────────
@@ -166,10 +179,11 @@ export class ChatGateway
   @UseGuards(WsJwtGuard)
   @SubscribeMessage('sendMessage')
   async handleSendMessage(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() payload: { groupId: string; content: string; imageUrl?: string },
+    @ConnectedSocket() client: AuthSocket,
+    @MessageBody()
+    payload: { groupId: string; content: string; imageUrl?: string },
   ) {
-    const user = client.data.user;
+    const user = client.data.user!;
 
     // 1. Save message to database
     const message = await this.prisma.chatMessage.create({
@@ -180,8 +194,8 @@ export class ChatGateway
         imageUrl: payload.imageUrl,
       },
       include: {
-        user: { select: { id: true, name: true, avatarUrl: true } }
-      }
+        user: { select: { id: true, name: true, avatarUrl: true } },
+      },
     });
 
     // 2. Broadcast to everyone in the room (including the sender)
@@ -192,7 +206,7 @@ export class ChatGateway
   }
 
   // ─── Helper: Extract token from handshake ───────────
-  private extractTokenFromHandshake(client: Socket): string | null {
+  private extractTokenFromHandshake(client: AuthSocket): string | null {
     // Method 1: From the `auth` object (most reliable)
     const authToken = client.handshake.auth?.token;
     if (authToken) return authToken;

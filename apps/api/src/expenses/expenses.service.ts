@@ -23,6 +23,17 @@ export class ExpensesService {
   }
 
   async addExpense(userId: string, groupId: string, data: CreateExpenseInput) {
+    // Validate split amounts equal total amount
+    const totalSplitAmount = data.splits.reduce(
+      (sum, split) => sum + (split.amount || 0),
+      0,
+    );
+    if (totalSplitAmount !== data.amount) {
+      throw new BadRequestException(
+        `Split amounts (${totalSplitAmount}) do not match total expense amount (${data.amount})`,
+      );
+    }
+
     try {
       return await this.prisma.$transaction(async (tx) => {
         // 1. Create the Expense

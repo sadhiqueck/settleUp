@@ -1,6 +1,10 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { randomUUID } from 'crypto';
 import * as path from 'path';
@@ -14,11 +18,13 @@ export class UploadsService {
   constructor(private configService: ConfigService) {
     this.bucketName = this.configService.get<string>('S3_BUCKET_NAME') || '';
     this.publicUrl = this.configService.get<string>('S3_PUBLIC_URL') || '';
-    
+
     const endpoint = this.configService.get<string>('S3_ENDPOINT') || '';
-    const accessKeyId = this.configService.get<string>('S3_ACCESS_KEY_ID') || '';
-    const secretAccessKey = this.configService.get<string>('S3_SECRET_ACCESS_KEY') || '';
-    const region = this.configService.get<string>('S3_REGION') || 'us-east-005'; 
+    const accessKeyId =
+      this.configService.get<string>('S3_ACCESS_KEY_ID') || '';
+    const secretAccessKey =
+      this.configService.get<string>('S3_SECRET_ACCESS_KEY') || '';
+    const region = this.configService.get<string>('S3_REGION') || 'us-east-005';
 
     this.s3Client = new S3Client({
       region,
@@ -30,7 +36,11 @@ export class UploadsService {
     });
   }
 
-  async uploadFile(fileBuffer: Buffer, originalName: string, contentType: string) {
+  async uploadFile(
+    fileBuffer: Buffer,
+    originalName: string,
+    contentType: string,
+  ) {
     try {
       const ext = path.extname(originalName);
       const key = `${randomUUID()}${ext}`;
@@ -46,7 +56,8 @@ export class UploadsService {
       await this.s3Client.send(command);
 
       // Return a URL pointing to our OWN backend, which will redirect to S3
-      const apiUrl = this.configService.get<string>('API_URL') || 'http://localhost:3000';
+      const apiUrl =
+        this.configService.get<string>('API_URL') || 'http://localhost:3000';
       return {
         fileUrl: `${apiUrl}/uploads/${key}`,
       };

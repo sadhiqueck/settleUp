@@ -167,7 +167,7 @@ export default function AnalyticsPage() {
                       tickFormatter={(value) => `₹${value.toLocaleString('en-IN')}`}
                     />
                     <Tooltip 
-                      formatter={(value: any) => [formatCurrency(value), "Spent"]}
+                      formatter={(value) => [formatCurrency(Number(value)), "Spent"]}
                       contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                     />
                     <Area type="monotone" dataKey="amount" stroke="#6366F1" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" />
@@ -203,7 +203,7 @@ export default function AnalyticsPage() {
                           ))}
                         </Pie>
                         <Tooltip 
-                          formatter={(value: any) => formatCurrency(value)}
+                          formatter={(value) => formatCurrency(Number(value))}
                           contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                         />
                       </PieChart>
@@ -245,7 +245,7 @@ export default function AnalyticsPage() {
                       tick={{ fontSize: 12, fill: '#64748B', fontWeight: 600 }}
                     />
                     <Tooltip 
-                      formatter={(value: any) => formatCurrency(value)}
+                      formatter={(value) => formatCurrency(Number(value))}
                       contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                       cursor={{ fill: '#F8FAFC' }}
                     />

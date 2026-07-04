@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Download, X, ZoomIn } from "lucide-react";
 import {
   Dialog,
@@ -88,13 +88,12 @@ function ImageLightbox({ src, isOpen, onClose, senderName }: ImageLightboxProps)
 
 interface ChatImageBubbleProps {
   src: string;
-  isOwn: boolean;
   senderName: string;
 }
 
 type ImageLoadState = "loading" | "loaded" | "error";
 
-export function ChatImageBubble({ src, isOwn, senderName }: ChatImageBubbleProps) {
+export const ChatImageBubble = React.memo(function ChatImageBubble({ src, senderName }: ChatImageBubbleProps) {
   const [loadState, setLoadState] = useState<ImageLoadState>("loading");
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
@@ -153,4 +152,4 @@ export function ChatImageBubble({ src, isOwn, senderName }: ChatImageBubbleProps
       />
     </>
   );
-}
+});

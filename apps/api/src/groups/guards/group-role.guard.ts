@@ -29,8 +29,8 @@ export class GroupRoleGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-    // Standardize to looking for 'id' param as that's what GroupsController uses
-    const groupId = request.params.id;
+    // Support both :groupId (expenses/settlements) and :id (groups)
+    const groupId = request.params.groupId || request.params.id;
 
     if (!user || !groupId) {
       throw new ForbiddenException('Invalid user or group context');

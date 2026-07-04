@@ -191,12 +191,14 @@ export class GroupsService {
 
       // Sort in memory by last activity date descending
       groupMemberships.sort((a, b) => {
-        const dateA = a.group.activities.length > 0 
-          ? new Date(a.group.activities[0].createdAt).getTime() 
-          : new Date(a.group.updatedAt).getTime();
-        const dateB = b.group.activities.length > 0 
-          ? new Date(b.group.activities[0].createdAt).getTime() 
-          : new Date(b.group.updatedAt).getTime();
+        const dateA =
+          a.group.activities.length > 0
+            ? new Date(a.group.activities[0].createdAt).getTime()
+            : new Date(a.group.updatedAt).getTime();
+        const dateB =
+          b.group.activities.length > 0
+            ? new Date(b.group.activities[0].createdAt).getTime()
+            : new Date(b.group.updatedAt).getTime();
         return dateB - dateA;
       });
 
@@ -248,7 +250,11 @@ export class GroupsService {
       include: {
         members: {
           where: { isActive: true },
-          include: { user: { select: { id: true, name: true, avatarUrl: true, vpa: true } } },
+          include: {
+            user: {
+              select: { id: true, name: true, avatarUrl: true, vpa: true },
+            },
+          },
         },
         balances: {
           include: { user: { select: { id: true, name: true, vpa: true } } },
@@ -330,12 +336,20 @@ export class GroupsService {
     // --- Balances (all members) ---
     const balances = group.balances.map((b) => ({
       memberId: b.userId,
-      name: b.userId === userId ? 'You' : (memberNameMap.get(b.userId) ?? 'Unknown'),
+      name:
+        b.userId === userId
+          ? 'You'
+          : (memberNameMap.get(b.userId) ?? 'Unknown'),
       balance: b.balance / 100,
     }));
 
     // --- Settlement suggestions (greedy algorithm) ---
-    const settlements = this.calculateSettlements(group.balances, memberNameMap, memberVpaMap, userId);
+    const settlements = this.calculateSettlements(
+      group.balances,
+      memberNameMap,
+      memberVpaMap,
+      userId,
+    );
 
     // --- Activity feed ---
     const activityTypeMap: Record<string, string> = {
@@ -403,7 +417,8 @@ export class GroupsService {
 
     for (const b of balances) {
       if (b.balance < 0) debtors.push({ userId: b.userId, amount: -b.balance });
-      else if (b.balance > 0) creditors.push({ userId: b.userId, amount: b.balance });
+      else if (b.balance > 0)
+        creditors.push({ userId: b.userId, amount: b.balance });
     }
 
     debtors.sort((a, b) => b.amount - a.amount);

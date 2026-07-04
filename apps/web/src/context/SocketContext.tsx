@@ -40,6 +40,10 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       socketRef.current = newSocket;
       setSocket(newSocket);
 
+      // Clean up any old listeners from this context to prevent memory leaks
+      newSocket.off("connect");
+      newSocket.off("disconnect");
+
       newSocket.on("connect", () => setIsConnected(true));
       newSocket.on("disconnect", () => setIsConnected(false));
 
@@ -56,12 +60,18 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     connect();
   }, [connect]);
 
-  // ─── Effect: Connect on mount, disconnect on unmount ──
+  // ─── Effect: Connect on mount ──
   useEffect(() => {
     connect();
 
     return () => {
-      disconnectSocket();
+      // We don't call disconnectSocket() here because we want the singleton 
+      // socket to persist across hot reloads and React Strict Mode remounts.
+      // But we DO clean up the local event listeners!
+      if (socketRef.current) {
+         socketRef.current.off("connect");
+         socketRef.current.off("disconnect");
+      }
     };
   }, [connect]);
 

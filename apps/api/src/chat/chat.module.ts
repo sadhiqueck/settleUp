@@ -9,7 +9,7 @@ import { WsJwtGuard } from './guards/ws-jwt.guard';
     // We need JwtModule to verify tokens in both the Gateway and the Guard
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_ACCESS_SECRET'),
         signOptions: { expiresIn: '15m' },
       }),

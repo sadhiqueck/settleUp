@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChevronDown, Pencil, Trash2 } from "lucide-react";
 import type { GroupExpense, GroupMember } from "@/hooks/useGroups";
@@ -25,7 +25,7 @@ interface ExpenseMessageBubbleProps {
   members: GroupMember[];
 }
 
-export function ExpenseMessageBubble({
+export const ExpenseMessageBubble = React.memo(function ExpenseMessageBubble({
   expense,
   isOwn,
   onEdit,
@@ -166,7 +166,7 @@ export function ExpenseMessageBubble({
       />
     </div>
   );
-}
+});
 
 interface ActivityBubbleProps {
   user: string;
@@ -175,7 +175,7 @@ interface ActivityBubbleProps {
   timestamp: string;
 }
 
-export function ActivityBubble({
+export const ActivityBubble = React.memo(function ActivityBubble({
   user,
   action,
   target,
@@ -191,4 +191,4 @@ export function ActivityBubble({
       <span className="block mt-0.5 opacity-60">{timestamp}</span>
     </div>
   );
-}
+});

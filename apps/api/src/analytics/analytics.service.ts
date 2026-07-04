@@ -44,7 +44,11 @@ export class AnalyticsService {
     const netBalance = balanceResult._sum.balance || 0;
 
     const categoryQuery = await this.prisma.$queryRaw<
-      Array<{ category: string; amount: bigint | number; count: bigint | number }>
+      Array<{
+        category: string;
+        amount: bigint | number;
+        count: bigint | number;
+      }>
     >`
       SELECT e.category, SUM(es.amount) as amount, COUNT(es.id) as count
       FROM expense_splits es
@@ -80,7 +84,12 @@ export class AnalyticsService {
     }));
 
     const topGroupsQuery = await this.prisma.$queryRaw<
-      Array<{ id: string; name: string; totalspent: bigint | number; balance: bigint | number }>
+      Array<{
+        id: string;
+        name: string;
+        totalspent: bigint | number;
+        balance: bigint | number;
+      }>
     >`
       SELECT 
         g.id, 

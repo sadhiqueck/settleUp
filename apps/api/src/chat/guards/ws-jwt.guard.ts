@@ -7,8 +7,8 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { WsException } from '@nestjs/websockets';
-import { Socket } from 'socket.io';
 import { PrismaService } from '../../prisma/prisma.service';
+import type { AuthSocket } from '../chat.gateway';
 
 @Injectable()
 export class WsJwtGuard implements CanActivate {
@@ -21,7 +21,7 @@ export class WsJwtGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const client: Socket = context.switchToWs().getClient();
+    const client: AuthSocket = context.switchToWs().getClient();
 
     // ─── 1. Already Authenticated ─────────────────────────────────
     if (client.data?.user) {
@@ -56,7 +56,7 @@ export class WsJwtGuard implements CanActivate {
       // Cache it so future events skip this DB/crypto overhead
       client.data.user = user;
       return true;
-    } catch (error) {
+    } catch {
       this.logger.warn(`Invalid token during event (${client.id})`);
       throw new WsException('Invalid or expired token');
     }
@@ -66,7 +66,7 @@ export class WsJwtGuard implements CanActivate {
    * Helper to extract the token, identical to the Gateway's method.
    * Supports auth object, HTTP cookies, and query params.
    */
-  private extractTokenFromHandshake(client: Socket): string | null {
+  private extractTokenFromHandshake(client: AuthSocket): string | null {
     const authToken = client.handshake.auth?.token;
     if (authToken) return authToken;
 

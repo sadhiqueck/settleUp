@@ -79,12 +79,6 @@ export interface ContactData {
   email: string;
   avatarUrl?: string;
 }
-export interface ContactData {
-  id: string;
-  name: string;
-  email: string;
-  avatarUrl?: string;
-}
 
 export interface GroupDetailsData extends GroupData {
   expenses: GroupExpense[];

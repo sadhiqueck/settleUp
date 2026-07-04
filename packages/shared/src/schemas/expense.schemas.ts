@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 const splitSchema = z.object({
   userId: z.string(),
-  amount: z.number().positive().optional(),
+  amount: z.number().int("Amount must be in paise (integer)").positive().optional(),
   percentage: z.number().min(0).max(100).optional(),
   shares: z.number().int().positive().optional(),
 })
@@ -11,7 +11,7 @@ export const createExpenseSchema = z.object({
   title: z.string().min(1, "Title is required").max(100, "Title is too long").refine((val) => val.trim().split(/\s+/).length <= 5, {
     message: "Title must be 5 words or less",
   }),
-  amount: z.number().positive(),
+  amount: z.number().int("Amount must be in paise (integer)").positive(),
   paidById: z.string(),
   category: z
     .enum(['FOOD', 'TRANSPORT', 'ACCOMMODATION', 'SHOPPING', 'ENTERTAINMENT', 'UTILITIES', 'OTHER'])

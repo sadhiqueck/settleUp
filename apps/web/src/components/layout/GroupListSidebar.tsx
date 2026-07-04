@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { Search, Pin } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { GroupData } from "@/hooks/useGroups";
 import { formatCurrency } from "@/lib/format";
 
@@ -76,11 +77,11 @@ export function GroupListSidebar({
         {isLoading ? (
           <div className="space-y-3 px-3 py-2">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-2xl animate-pulse">
-                <div className="size-12 rounded-2xl bg-zinc-100 shrink-0" />
+              <div key={i} className="flex items-center gap-3 p-3 rounded-2xl">
+                <Skeleton className="size-12 rounded-2xl shrink-0" />
                 <div className="flex-1 min-w-0 space-y-2">
-                  <div className="h-4 bg-zinc-200 rounded w-2/3" />
-                  <div className="h-3 bg-zinc-100 rounded w-1/2" />
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-3 w-1/2" />
                 </div>
               </div>
             ))}

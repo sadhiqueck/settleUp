@@ -12,14 +12,12 @@ import {
 } from "@/components/ui/card";
 import {
   AtSign,
-  Bell,
   CheckCircle2,
-  Key,
   LogOut,
-  Settings,
   User as UserIcon,
 } from "lucide-react";
 import { useUpdateProfile, useUserProfile, useLogout } from "@/hooks/useUser";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProfilePage() {
   const [name, setName] = useState("");
@@ -61,27 +59,27 @@ export default function ProfilePage() {
     return (
       <div className="chat-main-panel overflow-hidden">
         <header className="chat-header">
-          <div className="h-6 bg-zinc-200 rounded w-1/4 animate-pulse" />
-          <div className="h-4 bg-zinc-100 rounded w-1/3 mt-2 animate-pulse" />
+          <Skeleton className="h-6 w-1/4" />
+          <Skeleton className="h-4 w-1/3 mt-2" />
         </header>
 
         <div className="flex-1 overflow-y-auto p-6 max-w-2xl mx-auto w-full space-y-6">
           {/* Avatar card skeleton */}
-          <div className="chat-info-card p-8 mb-6 flex flex-col items-center space-y-4 animate-pulse">
-            <div className="size-24 rounded-full bg-zinc-100" />
-            <div className="h-6 bg-zinc-200 rounded w-1/3" />
-            <div className="h-4 bg-zinc-100 rounded w-1/4" />
+          <div className="chat-info-card p-8 mb-6 flex flex-col items-center space-y-4">
+            <Skeleton className="size-24 rounded-full" />
+            <Skeleton className="h-6 w-1/3" />
+            <Skeleton className="h-4 w-1/4" />
           </div>
 
           <div className="flex flex-col gap-6">
             {/* Form card skeleton */}
-            <div className="chat-info-card p-6 space-y-6 animate-pulse">
-              <div className="h-6 bg-zinc-200 rounded w-1/4" />
+            <div className="chat-info-card p-6 space-y-6">
+              <Skeleton className="h-6 w-1/4" />
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="space-y-2">
-                    <div className="h-4 bg-zinc-200 rounded w-1/6" />
-                    <div className="h-10 bg-zinc-50 rounded-2xl" />
+                    <Skeleton className="h-4 w-1/6" />
+                    <Skeleton className="h-10 rounded-2xl" />
                   </div>
                 ))}
               </div>

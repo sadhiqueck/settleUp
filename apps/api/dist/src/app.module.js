@@ -9,6 +9,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
+const core_1 = require("@nestjs/core");
+const throttler_1 = require("@nestjs/throttler");
 const prisma_module_1 = require("./prisma/prisma.module");
 const groups_module_1 = require("./groups/groups.module");
 const auth_module_1 = require("./auth/auth.module");
@@ -26,7 +28,27 @@ exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            config_1.ConfigModule.forRoot({ isGlobal: true }),
+            config_1.ConfigModule.forRoot({
+                isGlobal: true,
+                validate: (config) => {
+                    const required = [
+                        'DATABASE_URL',
+                        'JWT_ACCESS_SECRET',
+                        'JWT_REFRESH_SECRET',
+                    ];
+                    const missing = required.filter((key) => !config[key]);
+                    if (missing.length > 0) {
+                        throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+                    }
+                    return config;
+                },
+            }),
+            throttler_1.ThrottlerModule.forRoot([
+                {
+                    ttl: 60000,
+                    limit: 100,
+                },
+            ]),
             prisma_module_1.PrismaModule,
             auth_module_1.AuthModule,
             groups_module_1.GroupsModule,
@@ -38,7 +60,13 @@ exports.AppModule = AppModule = __decorate([
             uploads_module_1.UploadsModule,
         ],
         controllers: [app_controller_1.AppController],
-        providers: [app_service_1.AppService],
+        providers: [
+            app_service_1.AppService,
+            {
+                provide: core_1.APP_GUARD,
+                useClass: throttler_1.ThrottlerGuard,
+            },
+        ],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map
