@@ -7,12 +7,13 @@ import ProfilePage from "./pages/ProfilePage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import { ProtectedRoute, PublicRoute } from "./components/auth/RouteGuards";
 import { ChatAppLayout } from "./components/layout/ChatAppLayout";
-import { SocketProvider } from "./context/SocketContext";
+import { SocketProvider } from "./context/SocketProvider";
 import { ErrorBoundary } from "./components/layout/ErrorBoundary";
+import { ThemeProvider } from "./context/ThemeProvider";
 
 function App() {
   return (
-    <>
+    <ThemeProvider>
       <Toaster richColors position="top-center" />
       <ErrorBoundary>
         <Routes>
@@ -33,7 +34,7 @@ function App() {
         </Route>
       </Routes>
       </ErrorBoundary>
-    </>
+    </ThemeProvider>
   );
 }
 

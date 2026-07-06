@@ -1,5 +1,6 @@
-import { User as UserIcon, Bell, Key, Settings } from "lucide-react";
+import { User as UserIcon, Bell, Key, Settings, Palette } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 interface ProfileSidebarProps {
   className?: string;
@@ -56,6 +57,13 @@ export function ProfileSidebar({ className, activeTab = "personal" }: ProfileSid
         >
           <Settings size={18} /> Preferences
         </button>
+      </div>
+
+      <div className="p-4 md:p-6 border-t border-border/10 shrink-0">
+        <h3 className="font-display font-bold text-sm text-foreground flex items-center gap-2 mb-4">
+          <Palette size={16} className="text-primary" /> Appearance
+        </h3>
+        <ThemeToggle />
       </div>
     </aside>
   );

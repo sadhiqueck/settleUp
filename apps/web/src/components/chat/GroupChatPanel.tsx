@@ -185,7 +185,7 @@ export function GroupChatPanel({ group }: GroupChatPanelProps) {
       </header>
 
       {/* View tabs */}
-      <div className="shrink-0 flex gap-1 px-6 py-2 border-b border-border/20 bg-[#fafbfc]">
+      <div className="shrink-0 flex gap-1 px-6 py-2 border-b border-border/20 bg-muted/20">
         {(
           [
             { id: "feed" as const, label: "Feed", icon: MessageCircle },
@@ -203,7 +203,7 @@ export function GroupChatPanel({ group }: GroupChatPanelProps) {
             className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-display font-bold transition-all ${
               chatView === id
                 ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground hover:bg-white"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
           >
             <Icon size={14} />

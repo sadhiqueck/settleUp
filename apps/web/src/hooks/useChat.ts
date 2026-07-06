@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
+  import { useEffect, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useSocket } from '../context/SocketContext';
+import { useSocket } from '@/context/SocketContext';
 
 // Define the shape of our message
 export interface ChatMessage {
