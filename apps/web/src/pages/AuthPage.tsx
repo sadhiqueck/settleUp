@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/shared/components/ui/tabs";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/shared/components/ui/tabs";
 import {
   Card,
   CardContent,
@@ -14,11 +19,7 @@ import {
   ClayCheckIcon,
   ClayMoneyIcon,
 } from "@/shared/components/ui/clay-icons";
-import {
-  ShieldCheck,
-  Users,
-  Sparkles,
-} from "lucide-react";
+import { ShieldCheck, Users, Sparkles } from "lucide-react";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 import { RegisterForm } from "@/features/auth/components/RegisterForm";
 import { ClayShieldIcon } from "@/shared/components/ui/clay-icons";
@@ -36,7 +37,7 @@ export default function AuthPage() {
           <div className="absolute top-[10%] left-[10%] w-96 h-96 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.25)_0%,transparent_70%)] animate-clay-float-slow" />
           <div className="absolute bottom-[10%] right-[10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(139,92,246,0.2)_0%,transparent_70%)] animate-clay-float delay-1000" />
           <div className="absolute top-[40%] left-[60%] w-[400px] h-[400px] rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.15)_0%,transparent_70%)] animate-clay-float-delayed" />
-          
+
           {/* Subtle Grid Overlay */}
           <div className="absolute inset-0 opacity-[0.03] bg-[length:40px_40px] bg-[linear-gradient(white_1px,transparent_1px),linear-gradient(90deg,white_1px,transparent_1px)]" />
         </div>
@@ -223,9 +224,7 @@ export default function AuthPage() {
         </div>
 
         {/* Trust Indicators */}
-        <div 
-          className="mt-12 flex items-center gap-8 text-xs font-semibold text-slate-400 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both"
-        >
+        <div className="mt-12 flex items-center gap-8 text-xs font-semibold text-slate-400 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both">
           <div className="flex items-center gap-2">
             <ShieldCheck size={16} className="text-emerald-500" />
             <span>256-bit encryption</span>

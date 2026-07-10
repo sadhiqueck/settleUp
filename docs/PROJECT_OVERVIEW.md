@@ -133,6 +133,11 @@ A bright, friendly palette that makes finances feel approachable. It uses **Clay
 | Settled up | ✅ Neutral gray text with checkmark |
 | Pending | 🟡 Yellow dot / sand clock icon |
 
+### Font style
+Geist
+Gilory
+cal sans
+
 ---
 
 ## Pages & Responsibilities

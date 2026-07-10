@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import { Socket } from "socket.io-client";
-import { getSocket, disconnectSocket } from "../lib/socket";
+import { getSocket, disconnectSocket } from "../shared/lib/socket";
 import { SocketContext } from "./SocketContext";
 
 export function SocketProvider({ children }: { children: ReactNode }) {
