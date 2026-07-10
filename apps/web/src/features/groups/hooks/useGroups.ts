@@ -1,41 +1,75 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/shared/lib/apiClient";
-import type { 
-  GroupDetails, 
-  GroupSummary,
-  ExpenseWithSplits,
+import type {
+  Group,
+  GroupMember,
+  Expense,
+  ExpenseSplit,
   Settlement,
-  ActivityLog,
-  GroupMember
 } from "@settleup/shared";
 import { toast } from "sonner";
 import { groupKeys } from "./queryKeys";
 
 /* ─── View Models ─── */
 
-export interface GroupDataViewModel extends Omit<GroupSummary, "totalExpense"> {
+/** Extends the shared Group type with UI-specific fields the API returns */
+export interface GroupData extends Group {
   totalExpense: number;
-  memberCount: number;
   members: GroupMember[];
   lastActivity: string;
-  userBalance: number; 
-  inviteCode?: string;
+  userBalance: number;
 }
 
-export interface GroupExpenseViewModel extends ExpenseWithSplits {
+export interface GroupExpense {
+  id: string;
+  title: string;
+  amount: number;
+  category: string;
+  splitMethod: string;
+  paidBy: string;
+  paidById: string;
   paidByAvatar?: string | null;
+  date: string;
+  notes?: string | null;
   splitCount: number;
+  splits: ExpenseSplit[];
 }
 
-export interface GroupBalanceViewModel {
+export interface GroupBalance {
   memberId: string;
   name: string;
   balance: number;
 }
 
+export interface GroupSettlement {
+  from: string;
+  fromId: string;
+  fromVpa: string | null;
+  to: string;
+  toId: string;
+  toVpa: string | null;
+  amount: number;
+}
+
+export interface GroupActivity {
+  id: string;
+  type: "expense" | "settlement" | "info";
+  user: string;
+  action: string;
+  target?: string;
+  timestamp: string;
+}
+
+export interface GroupDetailsData extends GroupData {
+  expenses: GroupExpense[];
+  balances: GroupBalance[];
+  settlements: GroupSettlement[];
+  activity: GroupActivity[];
+}
+
 interface GroupsApiResponse {
   message: string;
-  groups: GroupDataViewModel[];
+  groups: GroupData[];
 }
 
 export interface ContactData {
@@ -43,13 +77,6 @@ export interface ContactData {
   name: string;
   email: string;
   avatarUrl?: string;
-}
-
-export interface GroupDetailsData extends GroupDataViewModel {
-  expenses: GroupExpenseViewModel[];
-  balances: GroupBalanceViewModel[];
-  settlements: Settlement[];
-  activity: ActivityLog[];
 }
 
 interface CreateGroupPayload {
@@ -60,13 +87,13 @@ interface CreateGroupPayload {
 
 /* ─── Fetch all groups for the authenticated user ─── */
 
-async function fetchGroups(): Promise<GroupDataViewModel[]> {
+async function fetchGroups(): Promise<GroupData[]> {
   const { data } = await apiClient.get<GroupsApiResponse>("/groups");
   return data.groups;
 }
 
 export function useGroups() {
-  return useQuery<GroupDataViewModel[]>({
+  return useQuery<GroupData[]>({
     queryKey: groupKeys.all,
     queryFn: fetchGroups,
     staleTime: 1000 * 60 * 2, // Consider data fresh for 2 minutes

@@ -1,11 +1,11 @@
 import { useMemo, useRef, useEffect } from "react";
 import { MessageCircle, ImageIcon, Loader2, Plus, Send } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
-import type { GroupDetailsData, GroupExpense } from "@/features/groups/hooks/useGroups";
+import type { GroupDetailsData,GroupExpense } from "@/features/groups/hooks/useGroups";
 import { ExpenseMessageBubble } from "@/features/chat/components/ExpenseMessageBubble";
 import { ChatImageBubble } from "@/features/chat/components/ChatImageBubble";
 import type { ChatMessage } from "@/features/chat/hooks/useChat";
-import { Button } from "../ui/button";
+import { Button } from "@/shared/components/ui/button";
 
 interface ChatFeedProps {
   group: GroupDetailsData;
