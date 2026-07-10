@@ -1,9 +1,9 @@
 import { useParams } from "react-router-dom";
-import { useGroup } from "@/hooks/useGroups";
+import { useGroup } from "@/features/groups/hooks/useGroups";
 import {
   GroupChatPanel,
   GroupChatLoading,
-} from "@/components/chat/GroupChatPanel";
+} from "@/features/chat/components/GroupChatPanel";
 
 export default function GroupDetailsPage() {
   const { id } = useParams();

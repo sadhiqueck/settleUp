@@ -1,27 +1,27 @@
 import { useState } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/shared/components/ui/tabs";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/shared/components/ui/card";
 import {
   ClayWalletIcon,
   ClayGroupIcon,
   ClayReceiptIcon,
   ClayCheckIcon,
   ClayMoneyIcon,
-} from "@/components/clay-icons";
+} from "@/shared/components/ui/clay-icons";
 import {
   ShieldCheck,
   Users,
   Sparkles,
 } from "lucide-react";
-import { LoginForm } from "@/components/auth/LoginForm";
-import { RegisterForm } from "@/components/auth/RegisterForm";
-import { ClayShieldIcon } from "@/components/clay-icons";
+import { LoginForm } from "@/features/auth/components/LoginForm";
+import { RegisterForm } from "@/features/auth/components/RegisterForm";
+import { ClayShieldIcon } from "@/shared/components/ui/clay-icons";
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("login");

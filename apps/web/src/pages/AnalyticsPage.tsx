@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, TrendingUp, TrendingDown, PieChart as PieChartIcon } from "lucide-react";
-import { useAnalytics } from "@/hooks/useAnalytics";
-import { formatCurrency } from "@/lib/format";
+import { useAnalytics } from "@/features/analytics/hooks/useAnalytics";
+import { formatCurrency } from "@/shared/lib/format";
 import {
   PieChart,
   Pie,

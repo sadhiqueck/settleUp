@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { VPA_REGEX } from "@settleup/shared";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { Separator } from "@/shared/components/ui/separator";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/shared/components/ui/card";
 import {
   AtSign,
   CheckCircle2,
@@ -17,9 +17,9 @@ import {
   Bell,
   User as UserIcon,
 } from "lucide-react";
-import { useUpdateProfile, useUserProfile, useLogout } from "@/hooks/useUser";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useUpdateProfile, useUserProfile, useLogout } from "@/shared/hooks/useUser";
+import { usePushNotifications } from "@/shared/hooks/usePushNotifications";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 
 export default function ProfilePage() {
   const [name, setName] = useState("");
