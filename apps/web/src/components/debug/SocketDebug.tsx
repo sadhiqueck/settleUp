@@ -9,6 +9,10 @@ export function SocketDebug() {
   const { socket, isConnected } = useSocket();
   const [pongMessage, setPongMessage] = useState<string>("");
 
+  if (!import.meta.env.DEV) {
+    return null;
+  }
+
   useEffect(() => {
     if (!socket) return;
 

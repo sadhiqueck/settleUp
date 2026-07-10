@@ -1,8 +1,11 @@
-import { useEffect } from "react";
 import { apiClient } from "@/lib/apiClient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { User, UpdateProfileInput } from "@settleup/shared";
 import { disconnectSocket } from "@/lib/socket";
+
+const userKeys = {
+  profile: ["user", "profile"] as const,
+};
 
 async function fetchUserProfile(): Promise<User> {
   const { data } = await apiClient.get<User>("/users/me");
@@ -10,57 +13,43 @@ async function fetchUserProfile(): Promise<User> {
 }
 
 async function updateUserProfile(payload: UpdateProfileInput): Promise<User> {
-  const { data } = await apiClient.patch<User>("users/me", payload);
+  const { data } = await apiClient.patch<User>("/users/me", payload);
   return data;
 }
 
+async function logoutUser(): Promise<void> {
+  await apiClient.post("/auth/logout");
+}
+
 export function useUserProfile() {
-  const query = useQuery({
-    queryKey: ["user-profile"],
+  return useQuery({
+    queryKey: userKeys.profile,
     queryFn: fetchUserProfile,
     staleTime: 1000 * 60 * 5,
-    retry: false, // Do not retry on 401 errors so PublicRoute doesn't hang
+    retry: false, // don't retry 401s so route guards resolve quickly
   });
-
-  useEffect(() => {
-    if (query.data) {
-      localStorage.setItem("user", JSON.stringify(query.data));
-    } else if (query.isError) {
-      localStorage.removeItem("user");
-    }
-  }, [query.data, query.isError]);
-
-  return query;
 }
 
 export function useUpdateProfile() {
-  const queryclient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: updateUserProfile,
-    onSuccess: (updatedData) => {
-    // Optimistically update the cache so the UI reflects the change instantly!
-      queryclient.setQueryData(["user-profile"], updatedData);
+    onSuccess: (updatedUser) => {
+      // Writes the server-confirmed response into the cache directly.
+      queryClient.setQueryData(userKeys.profile, updatedUser);
     },
   });
 }
 
-async function logoutUser() {
-  await apiClient.post("/auth/logout");
-}
-
 export function useLogout() {
-  const queryclient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: logoutUser,
     onSuccess: () => {
       disconnectSocket();
-      // Clear all cached data
-      queryclient.clear();
-      // Clear localStorage if any leftovers exist
-      localStorage.removeItem("user");
-      // Force a hard redirect to login
+      queryClient.clear();
       window.location.href = "/login";
     },
   });
