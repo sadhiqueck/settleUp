@@ -134,9 +134,11 @@ A bright, friendly palette that makes finances feel approachable. It uses **Clay
 | Pending | 🟡 Yellow dot / sand clock icon |
 
 ### Font style
+Inter
 Geist
 Gilory
 cal sans
+Manrope
 
 ---
 
@@ -624,10 +626,16 @@ Step 5: ✅ Real-time expense & chat notifications
    └── Triggered on new chat messages and expenses
 3. ✅ Advanced split methods
    └── Exact, Percentage, Shares fully supported in AddExpenseModal
-4. [ ] Export group data (PDF/CSV)
-5. [ ] Multi-currency support
-6. [ ] Docker production builds (multi-stage + turbo prune)
-7. [ ] Socket.io Redis Adapter (multi-instance horizontal scaling)
+4. [ ] Ghost Mode (Guest Splitting)
+   └── Add a temporary guest by name when splitting an expense (no app account needed)
+   └── Ghost appears only in that expense's split, not as a permanent group member
+   └── Payer can mark the ghost's share as "paid outside app" (cash, UPI, etc.)
+   └── Optional: send a claim link so the guest can sign up and own their balance
+   └── Sentinel User approach — ghost gets a minimal User record (isGhost: true)
+5. [ ] Export group data (PDF/CSV)
+6. [ ] Multi-currency support
+7. [ ] Docker production builds (multi-stage + turbo prune)
+8. [ ] Socket.io Redis Adapter (multi-instance horizontal scaling)
 ```
 
 ---
@@ -657,6 +665,7 @@ Step 5: ✅ Real-time expense & chat notifications
 - [x] Advanced split methods (Exact, Percentage, Shares)
 
 **V3 — Upcoming Features:**
+- [ ] Ghost Mode — add guests by name when splitting, mark as paid externally, optional claim link
 - [ ] Export group data (PDF/CSV)
 - [ ] Multi-currency support
 - [ ] Docker production builds

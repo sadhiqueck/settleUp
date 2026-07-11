@@ -111,25 +111,25 @@ export class ExpensesService {
 
         return expense;
       });
-      
+
       // 5. Send Push Notification
       const group = await this.prisma.group.findUnique({
         where: { id: groupId },
         select: { name: true },
       });
-      
+
       const payer = await this.prisma.user.findUnique({
         where: { id: data.paidById },
         select: { name: true, avatarUrl: true },
       });
-      
+
       if (group && payer) {
         // Run push notification async so it doesn't block response
         void this.pushService.sendPushToGroupMembers(groupId, userId, {
           title: `New expense in ${group.name}`,
           body: `${payer.name} added "${data.title}" for ₹${(data.amount / 100).toFixed(2)}`,
           icon: payer.avatarUrl || '/icon-192x192.png',
-          url: `/group/${groupId}`,
+          url: `/groups/${groupId}`,
         });
       }
 

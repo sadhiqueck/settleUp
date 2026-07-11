@@ -215,7 +215,7 @@ export class ChatGateway
         title: `New message in ${group.name}`,
         body: `${user.name}: ${payload.imageUrl ? 'sent an image' : payload.content}`,
         icon: user.avatarUrl || '/icon-192x192.png',
-        url: `/group/${payload.groupId}`,
+        url: `/groups/${payload.groupId}`,
       });
     }
 
