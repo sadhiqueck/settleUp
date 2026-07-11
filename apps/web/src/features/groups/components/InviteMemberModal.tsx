@@ -166,8 +166,8 @@ export function InviteMemberModal({
             if (navigator.share && inviteCode) {
               try {
                 await navigator.share({
-                  title: `Join ${groupName} on SettleUp`,
-                  text: `Hey! Join my group on SettleUp to split expenses easily. Use this invite link: ${import.meta.env.VITE_BASE_URL}/groups/join/${inviteCode}`,
+                  title: `Join ${groupName} on Fettl`,
+                  text: `Hey! Join my group on Fettl to split expenses easily. Use this invite link: ${import.meta.env.VITE_BASE_URL}/groups/join/${inviteCode}`,
                 });
               } catch (error) {
                 console.error("Error sharing", error);

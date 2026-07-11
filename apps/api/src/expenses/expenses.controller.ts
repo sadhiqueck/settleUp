@@ -13,8 +13,8 @@ import {
 import { ExpensesService } from './expenses.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
-import { createExpenseSchema, updateExpenseSchema } from '@settleup/shared';
-import type { CreateExpenseInput, UpdateExpenseInput } from '@settleup/shared';
+import { createExpenseSchema, updateExpenseSchema } from '@fettl/shared';
+import type { CreateExpenseInput, UpdateExpenseInput } from '@fettl/shared';
 import { GetUser } from '../common/decorators/get-user.decorator';
 import { ChatGateway } from '../chat/chat.gateway';
 

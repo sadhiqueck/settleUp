@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import axios from "axios";
 import { apiClient } from "@/shared/lib/apiClient";
-import type { CreateExpenseInput } from "@settleup/shared";
+import type { CreateExpenseInput } from "@fettl/shared";
 
 export const useAddExpense = (groupId: string) => {
   const queryClient = useQueryClient();

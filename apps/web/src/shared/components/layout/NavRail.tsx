@@ -54,11 +54,11 @@ export function NavRail({
       <button
         onClick={() => navigate("/dashboard")}
         className="hidden md:flex mb-6 size-10 rounded-xl items-center justify-center cursor-pointer hover:scale-105 transition-transform"
-        title="SettleUp"
+        title="Fettl"
       >
         <img
           src="/icon-192x192.png"
-          alt="SettleUp Logo"
+          alt="Fettl Logo"
           className="size-10 rounded-xl object-contain drop-shadow-md"
         />
       </button>

@@ -9,8 +9,8 @@ import {
 import { SettlementsService } from './settlements.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
-import { createSettlementSchema } from '@settleup/shared';
-import type { CreateSettlementInput } from '@settleup/shared';
+import { createSettlementSchema } from '@fettl/shared';
+import type { CreateSettlementInput } from '@fettl/shared';
 import { GetUser } from '../common/decorators/get-user.decorator';
 import { GroupRoleGuard } from '../groups/guards/group-role.guard';
 import { RequireGroupRoles } from '../groups/decorators/require-group-roles.decorator';

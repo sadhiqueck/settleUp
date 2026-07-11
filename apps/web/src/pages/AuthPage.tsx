@@ -162,7 +162,7 @@ export default function AuthPage() {
                   <CardDescription className="text-sm font-medium text-slate-500">
                     {activeTab === "login"
                       ? "Sign in to manage your expenses"
-                      : "Get started with SettleUp today"}
+                      : "Get started with Fettl today"}
                   </CardDescription>
                 </div>
               </div>

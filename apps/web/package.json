@@ -1,5 +1,5 @@
 {
-  "name": "@settleup/web",
+  "name": "@fettl/web",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -14,7 +14,7 @@
     "@fontsource-variable/nunito": "^5.2.7",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/themes": "^3.3.0",
-    "@settleup/shared": "workspace:*",
+    "@fettl/shared": "workspace:*",
     "@tailwindcss/vite": "^4.2.1",
     "@tanstack/react-query": "^5.90.21",
     "@tanstack/react-table": "^8.21.3",

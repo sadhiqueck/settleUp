@@ -10,7 +10,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
-      "@settleup/shared": fileURLToPath(
+      "@fettl/shared": fileURLToPath(
         new URL("../../packages/shared/src/index.ts", import.meta.url)
       ),
     },
@@ -19,7 +19,7 @@ export default defineConfig({
     allowedHosts: true,
   },
   optimizeDeps: {
-    include: ["@settleup/shared"],
+    include: ["@fettl/shared"],
   },
   test: {
     environment: "jsdom",

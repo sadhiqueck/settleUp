@@ -20,9 +20,9 @@ RUN pnpm install
 COPY . .
 
 # Generate Prisma Client explicitly for the API
-RUN pnpm --filter @settleup/api exec prisma generate
+RUN pnpm --filter @fettl/api exec prisma generate
 
 EXPOSE 3000
 
 # Start NestJS development server
-CMD ["pnpm", "--filter", "@settleup/api", "dev"]
+CMD ["pnpm", "--filter", "@fettl/api", "dev"]

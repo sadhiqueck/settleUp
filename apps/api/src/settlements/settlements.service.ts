@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import type { CreateSettlementInput } from '@settleup/shared';
+import type { CreateSettlementInput } from '@fettl/shared';
 import { ActivityType, SettlementStatus } from '@prisma/client';
 
 @Injectable()

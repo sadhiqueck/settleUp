@@ -4,13 +4,13 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: settleup
+      POSTGRES_DB: fettl
     ports:
       - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d settleup"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fettl"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -22,7 +22,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgresql://postgres:password@postgres:5432/settleup?schema=public
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/fettl?schema=public
       - FRONTEND_URL=https://app.sqck.online
     depends_on:
       postgres:
@@ -32,7 +32,7 @@ services:
     #   - /app/node_modules # (Keeps the container's node_modules safe)
 
     # We override the CMD to ensure the database is seeded/pushed before starting the NestJS server.
-    command: sh -c "pnpm --filter @settleup/api exec prisma db push && pnpm --filter @settleup/api dev"
+    command: sh -c "pnpm --filter @fettl/api exec prisma db push && pnpm --filter @fettl/api dev"
 
   web:
     build:

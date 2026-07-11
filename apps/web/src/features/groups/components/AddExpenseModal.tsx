@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createExpenseSchema, type CreateExpenseInput } from "@settleup/shared";
+import { createExpenseSchema, type CreateExpenseInput } from "@fettl/shared";
 import type { z } from "zod";
 
 type Item = {

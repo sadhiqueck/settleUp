@@ -1,4 +1,4 @@
-# SettleUp – Project Architecture & Overview
+# Fettl – Project Architecture & Overview
 
 > A modern, collaborative expense management system designed to seamlessly track group expenses, optimize debts, and facilitate transparent settlements.
 
@@ -33,7 +33,7 @@
 | **Queue** | BullMQ + Redis | Background job processing (AI receipts) |
 | **AI** | Google Gemini Pro Vision | Receipt OCR & structured data extraction |
 | **File Storage** | Cloudflare R2 (S3-compatible) | Receipt uploads (10GB free, zero egress) |
-| **Validation** | Zod (`@settleup/shared`) | Shared schemas across frontend & backend |
+| **Validation** | Zod (`@fettl/shared`) | Shared schemas across frontend & backend |
 | **Charts** | Recharts | Analytics visualizations |
 | **DevOps** | Docker Compose + Docker Engine v29 | Containerized local development |
 
@@ -56,7 +56,7 @@ Dates	            date-fns
 ## Repository Structure
 
 ```
-SettleUp/
+Fettl/
 ├── apps/
 │   ├── api/                    # NestJS backend
 │   │   ├── prisma/
@@ -87,7 +87,7 @@ SettleUp/
 │       │   └── index.css       # Design tokens + Tailwind
 │       └── Dockerfile.dev
 ├── packages/
-│   └── shared/                 # @settleup/shared
+│   └── shared/                 # @fettl/shared
 │       └── src/
 │           ├── schemas/        # Zod validation schemas
 │           └── types/          # TypeScript type definitions
@@ -295,7 +295,7 @@ User submits expense
        │
        ▼
 ┌──────────────────┐
-│  Validate Input  │  ← Zod schema from @settleup/shared
+│  Validate Input  │  ← Zod schema from @fettl/shared
 └────────┬─────────┘
          │
          ▼
@@ -705,12 +705,12 @@ To ensure the system scales elegantly and securely, the following non-functional
 
 ---
 
-# How SettleUp Can Beat GPay Split
+# How Fettl Can Beat GPay Split
 
 ## GPay Split has serious limitations that are your opportunity:
 
 
-| GPay Split weaknesses                 | SettleUp advantage                   |
+| GPay Split weaknesses                 | Fettl advantage                   |
 |---------------------------------------|--------------------------------------|
 | Only works within GPay users          | Works for everyone — any UPI app     |
 | No expense categorization             | Full categories, receipts, notes     |

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { VPA_REGEX } from "@settleup/shared";
+import { VPA_REGEX } from "@fettl/shared";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Separator } from "@/shared/components/ui/separator";

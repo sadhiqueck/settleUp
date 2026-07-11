@@ -23,7 +23,7 @@ function ImageLightbox({ src, isOpen, onClose, senderName }: ImageLightboxProps)
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `settleup-${Date.now()}.${blob.type.split("/")[1] || "jpg"}`;
+      a.download = `fettl-${Date.now()}.${blob.type.split("/")[1] || "jpg"}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

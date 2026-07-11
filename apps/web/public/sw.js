@@ -1,4 +1,4 @@
-const CACHE_NAME = 'settleup-pwa-v1';
+const CACHE_NAME = 'fettl-pwa-v1';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -105,7 +105,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'SettleUp', options)
+    self.registration.showNotification(data.title || 'Fettl', options)
   );
 });
 

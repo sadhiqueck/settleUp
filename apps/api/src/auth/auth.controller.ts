@@ -13,8 +13,8 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
-import { registerSchema, loginSchema } from '@settleup/shared';
-import type { RegisterInput, LoginInput } from '@settleup/shared';
+import { registerSchema, loginSchema } from '@fettl/shared';
+import type { RegisterInput, LoginInput } from '@fettl/shared';
 import type { Response, Request } from 'express';
 import { GoogleOauthGuard } from './guards/google-oauth.guard';
 

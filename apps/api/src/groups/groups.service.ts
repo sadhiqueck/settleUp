@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateGroupInput } from '@settleup/shared';
+import { CreateGroupInput } from '@fettl/shared';
 import { GroupRole, ActivityType, GroupCategory } from '@prisma/client';
 import type { Group } from '@prisma/client';
 import { randomBytes } from 'crypto';

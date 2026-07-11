@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import axios from "axios";
 import { apiClient } from "@/shared/lib/apiClient";
-import type { UpdateExpenseInput } from "@settleup/shared";
+import type { UpdateExpenseInput } from "@fettl/shared";
 
 /* ─── Update Expense (metadata only) ─── */
 

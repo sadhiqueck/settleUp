@@ -1,11 +1,11 @@
 {
-  "name": "SettleUp",
-  "short_name": "SettleUp",
+  "name": "Fettl",
+  "short_name": "Fettl",
   "description": "Split expenses with friends, track group debts, and settle up instantly.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "background_color": "#111827",
+  "theme_color": "#111827",
   "icons": [
     {
       "src": "/icon-192x192.png",

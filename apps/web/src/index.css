@@ -10,8 +10,8 @@
   --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Nunito Variable', 'Nunito', sans-serif;
 
-  --background: var(--bg-color, oklch(0.97 0.01 250));
-  /* #F8FAFC / cool slate */
+  --background: var(--bg-color, #FAFAF9);
+  /* Cool slate */
   --foreground: var(--fg-color, oklch(0.145 0.01 285.938));
   /* #111827 / very dark gray */
 
@@ -22,12 +22,12 @@
   --popover-foreground: var(--popover-fg-color, oklch(0.145 0.01 285.938));
 
   /* Primary color is dynamic based on data-theme */
-  --primary: var(--theme-primary, oklch(0.585 0.233 264));
-  /* default indigo */
+  --primary: var(--theme-primary, #FACC15);
+  /* default yellow */
   --primary-foreground: oklch(1 0 0);
   /* White on top of primary */
 
-  --secondary: var(--secondary-color, #1E1B4B);
+  --secondary: var(--secondary-color, #111827);
   --secondary-foreground: oklch(1 0 0);
 
   --muted: var(--muted-color, oklch(0.92 0.004 286.32));
@@ -41,14 +41,14 @@
 
   --border: var(--border-color, oklch(0.92 0.004 286.32));
   --input: var(--input-color, oklch(0.92 0.004 286.32));
-  --ring: var(--theme-primary, oklch(0.585 0.233 264));
+  --ring: var(--theme-primary, #FACC15);
 
   --radius: 1.5rem;
 
   --clay-shadow-light: var(--clay-light, rgba(255, 255, 255, 1));
-  --clay-shadow-dark: var(--clay-dark, rgba(199, 210, 254, 0.5));
-  --clay-shadow-dark-strong: var(--clay-dark-strong, rgba(199, 210, 254, 0.65));
-  --clay-glow-primary: var(--clay-glow, rgba(99, 102, 241, 0.25));
+  --clay-shadow-dark: var(--clay-dark, rgba(250, 204, 21, 0.4));
+  --clay-shadow-dark-strong: var(--clay-dark-strong, rgba(250, 204, 21, 0.55));
+  --clay-glow-primary: var(--clay-glow, rgba(250, 204, 21, 0.25));
   --clay-glow-red: var(--clay-glow-r, rgba(244, 63, 94, 0.2));
 }
 

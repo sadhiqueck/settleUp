@@ -6,7 +6,7 @@ import type {
   Expense,
   ExpenseSplit,
   Settlement,
-} from "@settleup/shared";
+} from "@fettl/shared";
 import { toast } from "sonner";
 import { groupKeys } from "./queryKeys";
 

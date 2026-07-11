@@ -11,8 +11,8 @@ import {
 import { UserService } from './user.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
-import { updateProfileSchema } from '@settleup/shared';
-import type { UpdateProfileInput } from '@settleup/shared';
+import { updateProfileSchema } from '@fettl/shared';
+import type { UpdateProfileInput } from '@fettl/shared';
 import { GetUser } from '../common/decorators/get-user.decorator';
 
 @Controller('users')

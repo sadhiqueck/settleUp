@@ -1,6 +1,6 @@
 import { apiClient } from "@/shared/lib/apiClient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { User, UpdateProfileInput } from "@settleup/shared";
+import type { User, UpdateProfileInput } from "@fettl/shared";
 import { disconnectSocket } from "@/shared/lib/socket";
 
 const userKeys = {

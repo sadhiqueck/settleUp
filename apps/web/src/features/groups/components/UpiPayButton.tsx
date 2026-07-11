@@ -29,7 +29,7 @@ function generateUpiUrl(
     pn: name,
     am: amount.toFixed(2),
     cu: "INR",
-    tn: `SettleUp: ${groupName}`,
+    tn: `Fettl: ${groupName}`,
   });
   return `upi://pay?${params.toString()}`;
 }
@@ -191,7 +191,7 @@ export function UpiPayButton({
               </button>
             </div>
             <p className="text-[11px] text-muted-foreground/70 font-medium">
-              SettleUp: {groupName}
+              Fettl: {groupName}
             </p>
           </div>
 

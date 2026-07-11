@@ -11,7 +11,7 @@ import { Label } from "@/shared/components/ui/label";
 import { ClayShieldIcon } from "@/shared/components/ui/clay-icons";
 import { Loader2, CheckCircle2, AlertCircle, AtSign } from "lucide-react";
 import { useUpdateProfile } from "@/shared/hooks/useUser";
-import { VPA_REGEX } from "@settleup/shared";
+import { VPA_REGEX } from "@fettl/shared";
 
 interface VpaOnboardingModalProps {
   isOpen: boolean;

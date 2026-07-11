@@ -10,8 +10,8 @@ import {
 } from '@nestjs/common';
 import { GroupsService } from './groups.service';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
-import { createGroupSchema } from '@settleup/shared';
-import type { CreateGroupInput } from '@settleup/shared';
+import { createGroupSchema } from '@fettl/shared';
+import type { CreateGroupInput } from '@fettl/shared';
 import type { Group } from '@prisma/client';
 import { GroupRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';

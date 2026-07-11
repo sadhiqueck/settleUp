@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import type { CreateExpenseInput, UpdateExpenseInput } from '@settleup/shared';
+import type { CreateExpenseInput, UpdateExpenseInput } from '@fettl/shared';
 import { ActivityType, ExpenseCategory, SplitMethod } from '@prisma/client';
 import { PushService } from '../push/push.service';
 

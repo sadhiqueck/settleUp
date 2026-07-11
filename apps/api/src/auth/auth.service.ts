@@ -7,7 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
-import type { RegisterInput, LoginInput } from '@settleup/shared';
+import type { RegisterInput, LoginInput } from '@fettl/shared';
 export interface GoogleProfile {
   id: string;
   displayName: string;
