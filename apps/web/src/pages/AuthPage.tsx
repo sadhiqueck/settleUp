@@ -12,175 +12,104 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
-import {
-  ClayWalletIcon,
-  ClayGroupIcon,
-  ClayReceiptIcon,
-  ClayCheckIcon,
-  ClayMoneyIcon,
-} from "@/shared/components/ui/clay-icons";
-import { ShieldCheck, Users, Sparkles } from "lucide-react";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 import { RegisterForm } from "@/features/auth/components/RegisterForm";
-import { ClayShieldIcon } from "@/shared/components/ui/clay-icons";
+import { useTheme } from "@/context/ThemeContext";
+import logoDark from "@/assets/logo-dark.webp";
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("login");
+  const { resolvedTheme } = useTheme();
+
+  const isDark = resolvedTheme === "dark";
+
+  // Customize background colors specifically for this Auth page
+  // Dark mode: Pure Black (#000000)
+  // Light mode: Beautiful soft grayish blue-gray that matches and blends with the light image (#f1f3f7)
+  const bgColor = isDark ? "#000000" : "#f1f3f7";
+  const bgRgba = isDark ? "0,0,0" : "241,243,247";
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* ── Left Hero Panel (Immersive Gradient) ── */}
-      <div className="hidden lg:flex lg:w-[58%] relative overflow-hidden items-center justify-center p-12 bg-black">
-        {/* Simple Gradient Background (Performance Optimized) */}
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-violet-900 to-indigo-900 overflow-hidden">
-          {/* Orbs using generic radial gradients (No blur filters) */}
-          <div className="absolute top-[10%] left-[10%] w-96 h-96 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.25)_0%,transparent_70%)] animate-clay-float-slow" />
-          <div className="absolute bottom-[10%] right-[10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(139,92,246,0.2)_0%,transparent_70%)] animate-clay-float delay-1000" />
-          <div className="absolute top-[40%] left-[60%] w-[400px] h-[400px] rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.15)_0%,transparent_70%)] animate-clay-float-delayed" />
+    <div 
+      className="relative min-h-svh overflow-hidden transition-colors duration-300"
+      style={{ backgroundColor: bgColor }}
+    >
 
-          {/* Subtle Grid Overlay */}
-          <div className="absolute inset-0 opacity-[0.03] bg-[length:40px_40px] bg-[linear-gradient(white_1px,transparent_1px),linear-gradient(90deg,white_1px,transparent_1px)]" />
-        </div>
-
-        {/* Content */}
-        <div className="relative z-10 max-w-xl w-full">
-          {/* Brand */}
-          <div className="animate-clay-fade-up">
-            <h1 className="font-display text-6xl font-extrabold text-white tracking-tight leading-tight">
-              Settle<span className="text-amber-400">Up</span>
-            </h1>
-            <p className="mt-6 text-2xl text-slate-300 font-display font-medium leading-relaxed max-w-lg">
-              Split expenses with friends, track debts, and settle up with ease.
-            </p>
-          </div>
-
-          {/* Floating Glassmorphic Cards */}
-          <div className="mt-16 relative h-[320px]">
-            <div className="absolute top-0 left-0 animate-clay-float z-20">
-              <div className="p-4 rounded-3xl flex items-center gap-4 bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
-                <div className="bg-white/20 p-2 rounded-2xl">
-                  <ClayWalletIcon size={36} />
-                </div>
-                <div>
-                  <p className="text-xs text-indigo-200 font-medium tracking-wide uppercase">
-                    You are owed
-                  </p>
-                  <p className="text-xl font-bold text-emerald-400 font-sans tracking-tight">
-                    ₹2,450
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="absolute top-8 right-8 animate-clay-float-delayed z-10">
-              <div className="p-4 rounded-3xl flex items-center gap-4 bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
-                <div className="bg-white/20 p-2 rounded-2xl">
-                  <ClayGroupIcon size={36} />
-                </div>
-                <div>
-                  <p className="text-xs text-indigo-200 font-medium tracking-wide uppercase">
-                    Active groups
-                  </p>
-                  <p className="text-xl font-bold text-white font-sans tracking-tight">
-                    5
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="absolute bottom-4 left-16 animate-clay-float-slow z-30">
-              <div className="p-4 rounded-3xl flex items-center gap-4 bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
-                <div className="bg-white/20 p-2 rounded-2xl">
-                  <ClayReceiptIcon size={36} />
-                </div>
-                <div>
-                  <p className="text-xs text-indigo-200 font-medium tracking-wide uppercase">
-                    This month
-                  </p>
-                  <p className="text-xl font-bold text-white font-sans tracking-tight">
-                    ₹8,320
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="absolute bottom-12 right-4 animate-clay-float z-10">
-              <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
-                <ClayCheckIcon size={32} />
-              </div>
-            </div>
-
-            <div className="absolute top-32 left-[45%] animate-clay-float-delayed z-0">
-              <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
-                <ClayMoneyIcon size={32} />
-              </div>
-            </div>
-          </div>
-
-          {/* Feature pills */}
-          <div className="mt-12 flex flex-wrap gap-3 animate-clay-fade-up delay-[400ms] opacity-0 fill-mode-forwards">
-            {[
-              "Track Expenses",
-              "Smart Splitting",
-              "Instant Settle",
-              "Group Analytics",
-            ].map((feature) => (
-              <span
-                key={feature}
-                className="rounded-full px-4 py-1.5 text-sm font-bold inline-flex items-center gap-1 bg-white/10 text-white backdrop-blur-md border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
-              >
-                {feature}
-              </span>
-            ))}
-          </div>
-        </div>
+      {/* ── Full-page background image (centered, scaled down, feathered) ── */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <img
+          src={isDark ? "/auth-bg-dark.webp" : "/auth-bg-light.webp"}
+          alt=""
+          className="w-[85%] max-w-[1200px] h-auto object-contain select-none opacity-90"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = "none";
+          }}
+        />
       </div>
 
-      {/* ── Right Auth Panel ── */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 relative">
-        <div className="w-full max-w-md animate-clay-scale-in delay-[150ms] opacity-0 fill-mode-forwards flex-1 flex flex-col justify-center">
-          {/* Mobile brand (hidden on desktop) */}
-          <div className="lg:hidden mb-8 text-center">
-            <h1 className="font-display text-4xl font-extrabold text-foreground tracking-tight">
-              Settle<span className="text-primary">Up</span>
-            </h1>
-            <p className="mt-2 text-muted-foreground font-display">
-              Expense splitting, simplified.
-            </p>
+      {/* Feathered edge gradients — fades the image into customized bg-background on all sides */}
+      {/* Left edge (strongest — form sits here) */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `linear-gradient(to right, ${bgColor} 0%, rgba(${bgRgba},0.95) 10%, rgba(${bgRgba},0.7) 25%, rgba(${bgRgba},0.3) 40%, transparent 60%)`,
+        }}
+      />
+      {/* Right edge */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `linear-gradient(to left, ${bgColor} 0%, rgba(${bgRgba},0.9) 5%, rgba(${bgRgba},0.4) 15%, transparent 35%)`,
+        }}
+      />
+      {/* Top edge */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `linear-gradient(to bottom, ${bgColor} 0%, rgba(${bgRgba},0.85) 5%, rgba(${bgRgba},0.3) 15%, transparent 30%)`,
+        }}
+      />
+      {/* Bottom edge */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `linear-gradient(to top, ${bgColor} 0%, rgba(${bgRgba},0.85) 5%, rgba(${bgRgba},0.3) 15%, transparent 30%)`,
+        }}
+      />
+
+      {/* ── Form panel (floats on top, left-aligned) ── */}
+      <div className="relative z-10 flex min-h-svh items-center justify-center lg:justify-start p-6 md:p-10 lg:pl-[8%] xl:pl-[12%]">
+        <div className="w-full max-w-sm">
+          {/* Brand Logo */}
+          <div className="mb-8 flex justify-start md:justify-center">
+            <img 
+              src={logoDark} 
+              className={`h-11 w-auto object-contain transition-all ${
+                isDark ? "invert brightness-200" : ""
+              }`} 
+              alt="Fettl" 
+            />
           </div>
 
-          <Card className="clay-card border-0 ring-0 p-0">
-            <CardHeader className="pb-2 pt-8 px-8">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="clay-card p-2 bg-indigo-50/50">
-                  <ClayShieldIcon size={28} />
-                </div>
-                <div>
-                  <CardTitle className="font-display text-2xl font-extrabold text-slate-800">
-                    {activeTab === "login" ? "Welcome back" : "Create account"}
-                  </CardTitle>
-                  <CardDescription className="text-sm font-medium text-slate-500">
-                    {activeTab === "login"
-                      ? "Sign in to manage your expenses"
-                      : "Get started with Fettl today"}
-                  </CardDescription>
-                </div>
-              </div>
+          <Card className="border-0 shadow-none bg-background/80 backdrop-blur-xl ring-1 ring-border/50">
+            <CardHeader className="text-center pb-2">
+              <CardTitle className="text-2xl font-bold font-display">
+                {activeTab === "login" ? "Welcome back" : "Create account"}
+              </CardTitle>
+              <CardDescription>
+                {activeTab === "login"
+                  ? "Sign in to manage your expenses"
+                  : "Get started with Fettl today"}
+              </CardDescription>
             </CardHeader>
 
-            <CardContent className="px-8 pb-8">
+            <CardContent>
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="w-full p-1 bg-slate-100/80 rounded-2xl mb-8 border border-slate-200/50 shadow-inner">
-                  <TabsTrigger
-                    value="login"
-                    className="flex-1 rounded-xl data-[state=active]:clay-card data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm font-display font-bold transition-all py-2"
-                  >
+                <TabsList className="w-full mb-6">
+                  <TabsTrigger value="login" className="flex-1">
                     Sign In
                   </TabsTrigger>
-                  <TabsTrigger
-                    value="register"
-                    className="flex-1 rounded-xl data-[state=active]:clay-card data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm font-display font-bold transition-all py-2"
-                  >
+                  <TabsTrigger value="register" className="flex-1">
                     Register
                   </TabsTrigger>
                 </TabsList>
@@ -196,16 +125,16 @@ export default function AuthPage() {
             </CardContent>
           </Card>
 
-          <p className="text-center text-sm text-slate-500 mt-6 font-display font-medium">
+          <p className="text-center text-sm text-muted-foreground mt-4">
             {activeTab === "login" ? (
               <>
                 Don't have an account?{" "}
                 <button
                   type="button"
                   onClick={() => setActiveTab("register")}
-                  className="text-indigo-600 font-bold hover:text-indigo-700 hover:underline transition-colors"
+                  className="text-primary font-semibold underline-offset-4 hover:underline transition-colors"
                 >
-                  Sign up free
+                  Sign up
                 </button>
               </>
             ) : (
@@ -214,28 +143,25 @@ export default function AuthPage() {
                 <button
                   type="button"
                   onClick={() => setActiveTab("login")}
-                  className="text-indigo-600 font-bold hover:text-indigo-700 hover:underline transition-colors"
+                  className="text-primary font-semibold underline-offset-4 hover:underline transition-colors"
                 >
                   Sign in
                 </button>
               </>
             )}
           </p>
-        </div>
 
-        {/* Trust Indicators */}
-        <div className="mt-12 flex items-center gap-8 text-xs font-semibold text-slate-400 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both">
-          <div className="flex items-center gap-2">
-            <ShieldCheck size={16} className="text-emerald-500" />
-            <span>256-bit encryption</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Users size={16} className="text-indigo-400" />
-            <span>10K+ users</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Sparkles size={16} className="text-amber-500" />
-            <span>Free forever</span>
+          {/* Terms footer */}
+          <div className="text-center text-xs text-muted-foreground text-balance mt-6">
+            By continuing, you agree to our{" "}
+            <a href="#" className="underline underline-offset-4 hover:text-primary">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="#" className="underline underline-offset-4 hover:text-primary">
+              Privacy Policy
+            </a>
+            .
           </div>
         </div>
       </div>

@@ -63,7 +63,7 @@ export function RegisterForm() {
   return (
     <>
       {error && (
-        <div className="mb-6 p-4 bg-rose-50/80 border border-rose-200 rounded-2xl flex items-start gap-3 text-rose-600 animate-in fade-in slide-in-from-top-2 shadow-sm">
+        <div className="mb-6 p-4 bg-destructive/10 border border-destructive/30 rounded-2xl flex items-start gap-3 text-destructive animate-in fade-in slide-in-from-top-2 shadow-sm">
           <AlertCircle size={18} className="shrink-0 mt-0.5" />
           <p className="text-sm font-medium leading-relaxed">{error}</p>
         </div>
@@ -76,13 +76,13 @@ export function RegisterForm() {
         <div className="flex flex-col gap-2">
           <Label
             htmlFor="register-name"
-            className="font-display font-bold text-sm text-slate-700"
+            className="font-display font-bold text-sm text-foreground"
           >
             Full Name
           </Label>
           <div className="relative">
             <User
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
               size={18}
             />
             <Input
@@ -101,13 +101,13 @@ export function RegisterForm() {
         <div className="flex flex-col gap-2">
           <Label
             htmlFor="register-email"
-            className="font-display font-bold text-sm text-slate-700"
+            className="font-display font-bold text-sm text-foreground"
           >
             Email
           </Label>
           <div className="relative">
             <Mail
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
               size={18}
             />
             <Input
@@ -126,13 +126,13 @@ export function RegisterForm() {
         <div className="flex flex-col gap-2">
           <Label
             htmlFor="register-password"
-            className="font-display font-bold text-sm text-slate-700"
+            className="font-display font-bold text-sm text-foreground"
           >
             Password
           </Label>
           <div className="relative">
             <Lock
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
               size={18}
             />
             <Input
@@ -148,7 +148,7 @@ export function RegisterForm() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
               {showPassword ? (
                 <EyeOff size={18} />
@@ -162,13 +162,13 @@ export function RegisterForm() {
         <div className="flex flex-col gap-2">
           <Label
             htmlFor="register-confirm"
-            className="font-display font-bold text-sm text-slate-700"
+            className="font-display font-bold text-sm text-foreground"
           >
             Confirm Password
           </Label>
           <div className="relative">
             <Lock
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
               size={18}
             />
             <Input
@@ -186,7 +186,7 @@ export function RegisterForm() {
               onClick={() =>
                 setShowConfirmPassword(!showConfirmPassword)
               }
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
               {showConfirmPassword ? (
                 <EyeOff size={18} />
@@ -209,11 +209,11 @@ export function RegisterForm() {
         </button>
         
         <div className="flex items-center gap-4 my-1">
-          <Separator className="flex-1 bg-slate-200" />
-          <span className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">
+          <Separator className="flex-1 bg-border" />
+          <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold">
             or
           </span>
-          <Separator className="flex-1 bg-slate-200" />
+          <Separator className="flex-1 bg-border" />
         </div>
 
         <button
