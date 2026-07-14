@@ -7,10 +7,12 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
+  /* Geist is the primary font — matches cal.com exactly */
   --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Nunito Variable', 'Nunito', sans-serif;
+  --font-display: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
 
-  --background: var(--bg-color, #FAFAF9);
+  /* Light bg: #f6f7f9 (cal.com uses this exact tone, not white) */
+  --background: var(--bg-color, #f6f7f9);
   /* Cool slate */
   --foreground: var(--fg-color, oklch(0.145 0.01 285.938));
   /* #111827 / very dark gray */
@@ -21,11 +23,11 @@
   --popover: var(--popover-color, oklch(1 0 0));
   --popover-foreground: var(--popover-fg-color, oklch(0.145 0.01 285.938));
 
-  /* Primary color is dynamic based on data-theme */
-  --primary: var(--theme-primary, #FACC15);
-  /* default yellow */
-  --primary-foreground: oklch(1 0 0);
-  /* White on top of primary */
+  /* Primary: Amber — matches Fettl brand logo yellow */
+  --primary: var(--theme-primary, #f59e0b);
+  /* default amber */
+  --primary-foreground: #000000;
+  /* Black text on amber for contrast */
 
   --secondary: var(--secondary-color, #111827);
   --secondary-foreground: oklch(1 0 0);
@@ -43,12 +45,13 @@
   --input: var(--input-color, oklch(0.92 0.004 286.32));
   --ring: var(--theme-primary, #FACC15);
 
-  --radius: 1.5rem;
+  /* Cal.com uses tight radius — ~8px base. We use 0.5rem */
+  --radius: 0.5rem;
 
   --clay-shadow-light: var(--clay-light, rgba(255, 255, 255, 1));
-  --clay-shadow-dark: var(--clay-dark, rgba(250, 204, 21, 0.4));
-  --clay-shadow-dark-strong: var(--clay-dark-strong, rgba(250, 204, 21, 0.55));
-  --clay-glow-primary: var(--clay-glow, rgba(250, 204, 21, 0.25));
+  --clay-shadow-dark: var(--clay-dark, rgba(245, 158, 11, 0.35));
+  --clay-shadow-dark-strong: var(--clay-dark-strong, rgba(245, 158, 11, 0.5));
+  --clay-glow-primary: var(--clay-glow, rgba(245, 158, 11, 0.2));
   --clay-glow-red: var(--clay-glow-r, rgba(244, 63, 94, 0.2));
 }
 
@@ -124,7 +127,7 @@
 }
 
 @theme inline {
-  --font-display: 'Nunito Variable', 'Nunito', sans-serif;
+  --font-display: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -147,9 +150,9 @@
   --color-rose: #F43F5E;
   --color-soft-clay: #F8FAFC;
   --color-clay-dark: #c7d2fe;
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
+  --radius-sm: calc(var(--radius) * 0.75);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) * 1.5);
 
   --animate-clay-bounce: clay-bounce 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   --animate-clay-press: clay-press 0.15s ease-out forwards;
@@ -305,28 +308,54 @@
     @apply bg-muted rounded-3xl border border-border/50;
   }
 
-  /* Primary button: flat minimal */
+  /* Primary button — cal.com style: near-black bg, white text, pill shape, subtle shadow */
   .clay-btn-primary {
-    @apply rounded-2xl border border-transparent font-bold transition-all px-6 py-3 text-white bg-primary cursor-pointer hover:opacity-90 active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2 rounded-[12px] border border-[#141414]
+           font-semibold text-sm transition-all px-4 py-2.5 h-10
+           bg-[#111827] text-white
+           hover:bg-[#1f2937]
+           shadow-[inset_0px_2px_0px_0px_rgba(255,255,255,0.15)]
+           cursor-pointer active:scale-[0.98] select-none
+           disabled:opacity-50 disabled:pointer-events-none;
   }
 
-  /* Secondary button */
+  /* Secondary button — amber accent, black text */
   .clay-btn-secondary {
-    @apply rounded-2xl border border-transparent font-semibold transition-all px-5 py-2.5 bg-secondary text-secondary-foreground cursor-pointer hover:opacity-90 active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2 rounded-[12px] border border-[#d97706]
+           font-semibold text-sm transition-all px-4 py-2.5 h-10
+           bg-primary text-primary-foreground
+           hover:bg-primary/90
+           shadow-[inset_0px_2px_0px_0px_rgba(255,255,255,0.3)]
+           cursor-pointer active:scale-[0.98] select-none
+           disabled:opacity-50 disabled:pointer-events-none;
   }
 
-  /* Ghost button */
+  /* Ghost button — white bg, border, like cal.com OAuth buttons */
   .clay-btn-ghost {
-    @apply rounded-2xl border border-border font-medium transition-all px-5 py-2.5 bg-background hover:bg-muted text-foreground cursor-pointer active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2 rounded-[12px] border border-[#e5e7eb] 
+           font-semibold text-sm transition-all px-4 py-2.5 h-10
+           bg-white text-[#111827]
+           hover:bg-[#f9fafb]
+           shadow-sm
+           cursor-pointer active:scale-[0.98] select-none
+           disabled:opacity-50 disabled:pointer-events-none;
   }
 
-  /* Input: Minimal */
+  /* Input — cal.com style: white bg, 1px border, rounded-md, clean */
   .clay-input {
-    @apply bg-background border border-border rounded-2xl px-4 py-3 text-foreground outline-none w-full transition-all focus:ring-2 focus:ring-ring focus:border-transparent;
+    @apply bg-white border border-[#e5e7eb] rounded-md
+           px-3 py-2.5 h-10 
+           text-[#111827] text-sm
+           outline-none w-full transition-all
+           placeholder:text-[#9ca3af]
+           focus:ring-2 focus:ring-[#f59e0b]/40 focus:border-[#f59e0b]
+           disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
-  .clay-input::placeholder {
-    @apply text-muted-foreground;
+  .dark .clay-input {
+    @apply bg-[#1e1f22] border-[rgba(255,255,255,0.08)] text-[#dbdee1]
+           placeholder:text-[#4e5058]
+           focus:ring-[#f59e0b]/30 focus:border-[#f59e0b];
   }
 
   /* Badge: flat */
@@ -370,9 +399,15 @@
     @apply bg-background border-b border-border shadow-sm;
   }
 
-  /* Google OAuth button */
+  /* Google OAuth button — cal.com dark style */
   .clay-btn-google {
-    @apply rounded-2xl border border-border font-semibold px-6 py-3 bg-background hover:bg-muted text-foreground cursor-pointer flex items-center gap-3 justify-center w-full transition-all active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-3 rounded-[12px]
+           font-semibold text-sm transition-all px-4 h-10 w-full
+           bg-[#111827] text-white border border-[#141414]
+           hover:bg-[#1f2937]
+           shadow-[inset_0px_2px_0px_0px_rgba(255,255,255,0.15)]
+           cursor-pointer active:scale-[0.98] select-none
+           disabled:opacity-50 disabled:pointer-events-none;
   }
 
   /* Stagger delay utility classes */

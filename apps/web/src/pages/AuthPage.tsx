@@ -34,51 +34,53 @@ export default function AuthPage() {
       className="relative min-h-svh overflow-hidden transition-colors duration-300"
       style={{ backgroundColor: bgColor }}
     >
+      {/* ── Centered Container for Ultra-Wide Screens ── */}
+      <div className="max-w-[1440px] mx-auto relative min-h-svh w-full flex flex-col justify-center">
+        
+        {/* ── Full-page background image (centered, scaled down, feathered) ── */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <img
+            src={isDark ? "/auth-bg-dark.webp" : "/auth-bg-light.webp"}
+            alt=""
+            className="w-[90%] md:w-[85%] max-w-[1100px] h-auto object-contain select-none opacity-90"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+        </div>
 
-      {/* ── Full-page background image (centered, scaled down, feathered) ── */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <img
-          src={isDark ? "/auth-bg-dark.webp" : "/auth-bg-light.webp"}
-          alt=""
-          className="w-[85%] max-w-[1200px] h-auto object-contain select-none opacity-90"
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = "none";
+        {/* Feathered edge gradients — placed inside the max-w container so they don't stretch indefinitely on ultra-wide screens */}
+        {/* Left edge (strongest — form sits here) */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `linear-gradient(to right, ${bgColor} 0%, rgba(${bgRgba},0.98) 15%, rgba(${bgRgba},0.85) 30%, rgba(${bgRgba},0.4) 45%, transparent 60%)`,
           }}
         />
-      </div>
+        {/* Right edge */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `linear-gradient(to left, ${bgColor} 0%, rgba(${bgRgba},0.9) 5%, rgba(${bgRgba},0.4) 15%, transparent 30%)`,
+          }}
+        />
+        {/* Top edge */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `linear-gradient(to bottom, ${bgColor} 0%, rgba(${bgRgba},0.9) 5%, rgba(${bgRgba},0.3) 15%, transparent 30%)`,
+          }}
+        />
+        {/* Bottom edge */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `linear-gradient(to top, ${bgColor} 0%, rgba(${bgRgba},0.9) 5%, rgba(${bgRgba},0.3) 15%, transparent 30%)`,
+          }}
+        />
 
-      {/* Feathered edge gradients — fades the image into customized bg-background on all sides */}
-      {/* Left edge (strongest — form sits here) */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: `linear-gradient(to right, ${bgColor} 0%, rgba(${bgRgba},0.95) 10%, rgba(${bgRgba},0.7) 25%, rgba(${bgRgba},0.3) 40%, transparent 60%)`,
-        }}
-      />
-      {/* Right edge */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: `linear-gradient(to left, ${bgColor} 0%, rgba(${bgRgba},0.9) 5%, rgba(${bgRgba},0.4) 15%, transparent 35%)`,
-        }}
-      />
-      {/* Top edge */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: `linear-gradient(to bottom, ${bgColor} 0%, rgba(${bgRgba},0.85) 5%, rgba(${bgRgba},0.3) 15%, transparent 30%)`,
-        }}
-      />
-      {/* Bottom edge */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: `linear-gradient(to top, ${bgColor} 0%, rgba(${bgRgba},0.85) 5%, rgba(${bgRgba},0.3) 15%, transparent 30%)`,
-        }}
-      />
-
-      {/* ── Form panel (floats on top, left-aligned) ── */}
-      <div className="relative z-10 flex min-h-svh items-center justify-center lg:justify-start p-6 md:p-10 lg:pl-[8%] xl:pl-[12%]">
+        {/* ── Form panel (floats on top, left-aligned) ── */}
+        <div className="relative z-10 flex w-full items-center justify-center lg:justify-start p-6 md:p-10 lg:pl-16 xl:pl-24">
         <div className="w-full max-w-sm">
           {/* Brand Logo */}
           <div className="mb-8 flex justify-start md:justify-center">
@@ -163,6 +165,7 @@ export default function AuthPage() {
             </a>
             .
           </div>
+        </div>
         </div>
       </div>
     </div>

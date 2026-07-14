@@ -6,7 +6,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Separator } from "@/shared/components/ui/separator";
 import { ClayGoogleIcon } from "@/shared/components/ui/clay-icons";
-import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -49,111 +49,97 @@ export function LoginForm() {
   return (
     <>
       {error && (
-        <div className="mb-6 p-4 bg-destructive/10 border border-destructive/30 rounded-2xl flex items-start gap-3 text-destructive animate-in fade-in slide-in-from-top-2 shadow-sm">
-          <AlertCircle size={18} className="shrink-0 mt-0.5" />
-          <p className="text-sm font-medium leading-relaxed">{error}</p>
+        <div className="mb-5 p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2.5 text-red-600 dark:bg-red-950/20 dark:border-red-800/40 dark:text-red-400">
+          <AlertCircle size={16} className="shrink-0 mt-0.5" />
+          <p className="text-sm leading-snug">{error}</p>
         </div>
       )}
 
-      <form onSubmit={handleLogin} className="flex flex-col gap-5">
-        <div className="flex flex-col gap-2">
+      <form onSubmit={handleLogin} className="flex flex-col gap-4">
+        {/* Email */}
+        <div className="flex flex-col gap-1.5">
           <Label
             htmlFor="login-email"
-            className="font-display font-bold text-sm text-foreground"
+            className="text-sm font-semibold text-[#111827] dark:text-[#dbdee1]"
           >
             Email
           </Label>
-          <div className="relative">
-            <Mail
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
-              size={18}
-            />
-            <Input
-              id="login-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="clay-input pl-11 h-12 text-[15px]"
-              required
-              disabled={isLoading}
-            />
-          </div>
+          <Input
+            id="login-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="john@example.com"
+            required
+            disabled={isLoading}
+          />
         </div>
 
-        <div className="flex flex-col gap-2">
+        {/* Password */}
+        <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
             <Label
               htmlFor="login-password"
-              className="font-display font-bold text-sm text-foreground"
+              className="text-sm font-semibold text-[#111827] dark:text-[#dbdee1]"
             >
               Password
             </Label>
             <button
               type="button"
-              className="text-xs text-primary font-bold hover:text-primary/80 transition-colors hover:underline"
+              className="text-xs text-[#f59e0b] font-medium hover:text-[#d97706] transition-colors"
             >
               Forgot password?
             </button>
           </div>
           <div className="relative">
-            <Lock
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
-              size={18}
-            />
             <Input
               id="login-password"
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="clay-input pl-11 pr-11 h-12 text-[15px]"
+              placeholder="•••••••••••••"
+              className="pr-10"
               required
               disabled={isLoading}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9ca3af] hover:text-[#374151] dark:hover:text-[#dbdee1] transition-colors"
             >
-              {showPassword ? (
-                <EyeOff size={18} />
-              ) : (
-                <Eye size={18} />
-              )}
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
         </div>
 
+        {/* Submit */}
         <button
           type="submit"
           disabled={isLoading}
-          className="clay-btn-primary w-full text-[15px] mt-4 flex items-center justify-center gap-2 h-12 shadow-[0_8px_20px_rgba(99,102,241,0.3)] hover:shadow-[0_12px_24px_rgba(99,102,241,0.4)]"
+          className="clay-btn-primary w-full h-10 mt-1 shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_4px_12px_rgba(17,24,39,0.2)]"
         >
-          {isLoading && (
-            <Loader2 className="animate-spin" size={18} />
-          )}
-          {isLoading ? "Signing in..." : "Sign In"}
+          {isLoading && <Loader2 className="animate-spin" size={16} />}
+          {isLoading ? "Signing in..." : "Sign in"}
         </button>
 
-        <div className="flex items-center gap-4 my-2">
-          <Separator className="flex-1 bg-border" />
-          <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold">
-            or continue with
+        {/* Divider */}
+        <div className="flex items-center gap-3 my-1">
+          <Separator className="flex-1 bg-[#e5e7eb] dark:bg-[rgba(255,255,255,0.08)]" />
+          <span className="text-xs uppercase tracking-wider text-[#9ca3af] font-medium">
+            or
           </span>
-          <Separator className="flex-1 bg-border" />
+          <Separator className="flex-1 bg-[#e5e7eb] dark:bg-[rgba(255,255,255,0.08)]" />
         </div>
 
+        {/* Google */}
         <button
           type="button"
           disabled={isLoading}
-          onClick={() => window.location.href = `${API_URL}/auth/google`}
-          className="clay-btn-google h-12"
+          onClick={() => (window.location.href = `${API_URL}/auth/google`)}
+          className="clay-btn-google"
         >
-          <ClayGoogleIcon size={20} />
-          <span className="font-display font-bold text-[15px]">
-            Google
-          </span>
+          <ClayGoogleIcon size={18} />
+          <span className="font-semibold text-sm">Continue with Google</span>
         </button>
       </form>
     </>
