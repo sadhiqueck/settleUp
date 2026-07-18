@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { validateEnv } from './common/config/env.config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { PrismaModule } from './prisma/prisma.module';
@@ -19,21 +20,7 @@ import { PushModule } from './push/push.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      // Add a simple check for critical env vars
-      validate: (config) => {
-        const required = [
-          'DATABASE_URL',
-          'JWT_ACCESS_SECRET',
-          'JWT_REFRESH_SECRET',
-        ];
-        const missing = required.filter((key) => !config[key]);
-        if (missing.length > 0) {
-          throw new Error(
-            `Missing required environment variables: ${missing.join(', ')}`,
-          );
-        }
-        return config;
-      },
+      validate: validateEnv,
     }),
     ThrottlerModule.forRoot([
       {

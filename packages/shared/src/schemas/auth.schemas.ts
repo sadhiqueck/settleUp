@@ -1,20 +1,33 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
-export const registerSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email format').regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Must be a valid email address'),
-  password: z
+// ─── Shared Fields ────────────────────────────────────────
+
+const emailField = z
+  .string()
+  .email('Invalid email format')
+  .regex(
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+    'Must be a valid email address',
+  );
+
+// ─── Passwordless Auth ────────────────────────────────────
+
+export const passwordlessStartSchema = z.object({
+  email: emailField,
+});
+
+export const verifyOtpSchema = z.object({
+  email: emailField,
+  otp: z
     .string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Must contain uppercase')
-    .regex(/[0-9]/, 'Must contain a number')
-    .regex(/[^a-zA-Z0-9]/, 'Must contain a special character'),
-})
+    .length(6, 'OTP must be 6 digits')
+    .regex(/^\d{6}$/, 'OTP must contain only digits'),
+});
 
-export const loginSchema = z.object({
-  email: z.string().email('Invalid email format').regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Must be a valid email address'),
-  password: z.string().min(1, 'Password is required'),
-})
+export const verifyMagicLinkSchema = z.object({
+  token: z.string().min(1, 'Token is required'),
+});
 
-export type RegisterInput = z.infer<typeof registerSchema>
-export type LoginInput = z.infer<typeof loginSchema>
+export type PasswordlessStartInput = z.infer<typeof passwordlessStartSchema>;
+export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
+export type VerifyMagicLinkInput = z.infer<typeof verifyMagicLinkSchema>;

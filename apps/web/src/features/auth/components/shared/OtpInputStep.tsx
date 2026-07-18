@@ -91,7 +91,7 @@ export function OtpInputStep({
         </span>
 
         {providers.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-2">
+          <span className="flex flex-wrap justify-center gap-2">
             {providers.map((p) => (
               <Button
                 key={p.name}
@@ -105,7 +105,7 @@ export function OtpInputStep({
                 {providers.length === 1 ? `Open ${p.name}` : p.name}
               </Button>
             ))}
-          </div>
+          </span>
         )}
       </FieldDescription>
       <Button

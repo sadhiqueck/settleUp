@@ -5,7 +5,9 @@ import cookieParser from 'cookie-parser';
 import type { Request, Response, NextFunction } from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['log', 'error', 'warn', 'debug', 'verbose'],
+  });
 
   const allowedOrigins = ['http://localhost:5173'];
   if (process.env.FRONTEND_URL) {

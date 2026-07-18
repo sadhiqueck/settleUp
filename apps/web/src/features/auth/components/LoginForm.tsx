@@ -95,7 +95,7 @@ export function LoginForm({
         Don't have an account?{" "}
         <Link
           to="/signup"
-          className="text-blue-500 hover:text-blue-600 font-medium hover:underline transition-colors"
+          className="text-blue-500 hover:text-blue-600 dark:text-zinc-300 dark:hover:text-white font-medium hover:underline transition-colors"
         >
           Sign up
         </Link>

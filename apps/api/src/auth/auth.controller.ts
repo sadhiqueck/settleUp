@@ -13,8 +13,8 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
-import { registerSchema, loginSchema } from '@fettl/shared';
-import type { RegisterInput, LoginInput } from '@fettl/shared';
+import { passwordlessStartSchema } from '@fettl/shared';
+import type { PasswordlessStartInput } from '@fettl/shared';
 import type { Response, Request } from 'express';
 import { GoogleOauthGuard } from './guards/google-oauth.guard';
 
@@ -44,30 +44,61 @@ export class AuthController {
     });
   }
 
-  @Post('register')
-  @UsePipes(new ZodValidationPipe(registerSchema))
-  async register(
-    @Body() registerDto: RegisterInput,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const { access_token, refresh_token, user } =
-      await this.authService.register(registerDto);
-    this.setCookies(res, access_token, refresh_token);
-    return { user };
+  // ─── Passwordless Auth ─────────────────────────────────
+
+  @Post('passwordless/start')
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ZodValidationPipe(passwordlessStartSchema))
+  passwordlessStart(@Body() dto: PasswordlessStartInput) {
+    return this.authService.passwordlessStart(dto);
   }
 
-  @Post('login')
-  @HttpCode(HttpStatus.OK)
-  @UsePipes(new ZodValidationPipe(loginSchema))
-  async login(
-    @Body() loginDto: LoginInput,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const { access_token, refresh_token, user } =
-      await this.authService.login(loginDto);
-    this.setCookies(res, access_token, refresh_token);
-    return { user };
+  // @Post('passwordless/verify')
+  // @HttpCode(HttpStatus.OK)
+  // @UsePipes(new ZodValidationPipe(verifyOtpSchema))
+  // async passwordlessVerify(
+  //   @Body() dto: VerifyOtpInput,
+  //   @Res({ passthrough: true }) res: Response,
+  // ) {
+  //   const { access_token, refresh_token, user } =
+  //     await this.authService.verifyOtp(dto);
+  //   this.setCookies(res, access_token, refresh_token);
+  //   return { user };
+  // }
+
+  // @Get('magic-link/verify')
+  // async magicLinkVerify(@Query('token') token: string, @Res() res: Response) {
+  //   const { access_token, refresh_token } =
+  //     await this.authService.verifyMagicLink(token);
+  //   this.setCookies(res, access_token, refresh_token);
+
+  //   const frontendUrl =
+  //     process.env.VITE_FRONTEND_URL ?? 'http://localhost:5173';
+  //   return res.redirect(`${frontendUrl}/dashboard`);
+  // }
+
+  // ─── Google OAuth ──────────────────────────────────────
+
+  @Get('google')
+  @UseGuards(GoogleOauthGuard)
+  googleAuth() {
+    // Intercepted by GoogleOauthGuard
   }
+
+  @Get('google/callback')
+  @UseGuards(GoogleOauthGuard)
+  async googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
+    const { access_token, refresh_token } = await this.authService.googleLogin(
+      req.user as import('./auth.service').GoogleProfile,
+    );
+    this.setCookies(res, access_token, refresh_token);
+
+    const frontendUrl =
+      process.env.VITE_FRONTEND_URL ?? 'http://localhost:5173';
+    return res.redirect(`${frontendUrl}/dashboard`);
+  }
+
+  // ─── Session Management ────────────────────────────────
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
@@ -103,25 +134,5 @@ export class AuthController {
     res.clearCookie('auth_token', cookieOptions);
     res.clearCookie('refresh_token', cookieOptions);
     return { message: 'Logged out successfully' };
-  }
-
-  @Get('google')
-  @UseGuards(GoogleOauthGuard)
-  async googleAuth() {
-    // This will be intercepted by GoogleOauthGuard
-  }
-
-  @Get('google/callback')
-  @UseGuards(GoogleOauthGuard)
-  async googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
-    const { access_token, refresh_token } = await this.authService.googleLogin(
-      req.user as import('./auth.service').GoogleProfile,
-    );
-    this.setCookies(res, access_token, refresh_token);
-
-    // Redirect to frontend dashboard
-    const frontendUrl =
-      process.env.VITE_FRONTEND_URL || 'http://localhost:5173';
-    return res.redirect(`${frontendUrl}/dashboard`);
   }
 }

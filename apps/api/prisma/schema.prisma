@@ -308,3 +308,18 @@ model ChatMessage {
   @@index([groupId, createdAt]) // Optimize query for loading chat history
   @@map("chat_messages")
 }
+
+// ─── Authentication ─────────────────────────────────────
+
+model PasswordlessRequest {
+  id        String   @id @default(cuid())
+  email     String
+  otpHash   String?
+  tokenHash String?
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@map("passwordless_requests")
+}

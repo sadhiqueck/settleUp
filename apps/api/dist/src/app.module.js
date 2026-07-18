@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
+const env_config_1 = require("./common/config/env.config");
 const core_1 = require("@nestjs/core");
 const throttler_1 = require("@nestjs/throttler");
 const prisma_module_1 = require("./prisma/prisma.module");
@@ -30,18 +31,7 @@ exports.AppModule = AppModule = __decorate([
         imports: [
             config_1.ConfigModule.forRoot({
                 isGlobal: true,
-                validate: (config) => {
-                    const required = [
-                        'DATABASE_URL',
-                        'JWT_ACCESS_SECRET',
-                        'JWT_REFRESH_SECRET',
-                    ];
-                    const missing = required.filter((key) => !config[key]);
-                    if (missing.length > 0) {
-                        throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
-                    }
-                    return config;
-                },
+                validate: env_config_1.validateEnv,
             }),
             throttler_1.ThrottlerModule.forRoot([
                 {

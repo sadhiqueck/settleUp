@@ -95,7 +95,7 @@ export function SignupForm({
         Already using Fettl?{" "}
         <Link
           to="/login"
-          className="text-blue-500 hover:text-blue-600 font-medium hover:underline transition-colors"
+          className="text-blue-500 hover:text-blue-600 dark:text-zinc-300 dark:hover:text-white font-medium hover:underline transition-colors"
         >
           Sign in
         </Link>
