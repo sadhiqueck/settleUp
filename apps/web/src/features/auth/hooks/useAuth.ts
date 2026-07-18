@@ -1,25 +1,13 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-// Simulated API calls for when the NestJS endpoints are not yet ready
-const simulateApiCall = async <T>(data: T, shouldFail = false, delay = 1500): Promise<T> => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (shouldFail) {
-        reject(new Error("Simulated API Error"));
-      } else {
-        resolve(data);
-      }
-    }, delay);
-  });
-};
+import { apiClient } from "@/shared/lib/apiClient";
 
 export function useAuth() {
   const sendOtp = useMutation({
     mutationFn: async (email: string) => {
-      // TODO: Replace with real NestJS axios call: return axios.post('/api/auth/send-otp', { email })
-      console.log(`Sending OTP to ${email}`);
-      return simulateApiCall({ success: true, email });
+      const response = await apiClient.post('/auth/passwordless/start', { email });
+      return response.data;
     },
     onSuccess: (_, email) => {
       toast.success(`Verification code sent to ${email}`);
@@ -31,14 +19,8 @@ export function useAuth() {
 
   const verifyOtp = useMutation({
     mutationFn: async ({ email, otp }: { email: string; otp: string }) => {
-      // TODO: Replace with real NestJS axios call: return axios.post('/api/auth/verify-otp', { email, otp })
-      console.log(`Verifying OTP ${otp} for ${email}`);
-      // Simulate failure if OTP is not 123456 (just for testing error UI)
-      const shouldFail = otp !== "123456";
-      if (shouldFail) {
-        throw new Error("Invalid verification code");
-      }
-      return simulateApiCall({ success: true, token: "jwt_token_here" }, false, 1000);
+      const response = await apiClient.post('/auth/passwordless/verify', { email, otp });
+      return response.data;
     },
     onSuccess: () => {
       toast.success("Successfully verified!");
