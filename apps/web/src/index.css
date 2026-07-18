@@ -276,6 +276,21 @@
     @apply bg-background text-foreground;
   }
 
+  /* Custom cursor — only on devices with a real mouse */
+  @media (hover: hover) and (pointer: fine) {
+    *, html, body {
+      cursor: url('/cursors/default.svg') 5 3, default;
+    }
+    input, textarea, [contenteditable="true"] {
+      cursor: url('/cursors/text.svg') 12 12, text;
+    }
+    button, a, [role="button"], label[for], 
+    input[type="submit"], input[type="button"], 
+    input[type="reset"], [data-cursor="pointer"] {
+      cursor: none !important;
+    }
+  }
+
   html {
     @apply font-sans;
     scroll-behavior: smooth;
