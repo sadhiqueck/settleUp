@@ -5,15 +5,18 @@ const INTERACTIVE_SELECTORS =
   "button, a, [role='button'], label[for], input[type='submit'], input[type='button'], input[type='reset'], [data-cursor='pointer']";
 
 /**
- * Returns true only on devices with a real mouse (no touch-only devices).
+ * Returns true only on devices with a real mouse (not touch-only).
+ * Uses lazy useState init to avoid synchronous setState inside an effect.
  */
 function useHasPointer() {
-  const [hasPointer, setHasPointer] = useState(false);
+  const [hasPointer, setHasPointer] = useState<boolean>(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(hover: hover) and (pointer: fine)").matches
+  );
 
   useEffect(() => {
     const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
-    setHasPointer(mq.matches);
-
     const handler = (e: MediaQueryListEvent) => setHasPointer(e.matches);
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);

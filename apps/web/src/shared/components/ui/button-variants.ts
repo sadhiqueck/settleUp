@@ -17,7 +17,7 @@ export const buttonVariants = cva(
           "border border-black/10 bg-gradient-to-b from-gray-50 to-gray-200/70 text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,1),0_1px_2px_rgba(0,0,0,0.05)] hover:brightness-95 dark:border-white/10 dark:bg-gradient-to-b dark:from-white/10 dark:to-transparent dark:text-white dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] dark:hover:from-white/15",
         // Glassy inverted button (Exactly outline style but inverted)
         glassyInverted:
-          "border border-black/90 bg-gradient-to-b from-zinc-600 to-zinc-950 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),inset_0_-1px_0_rgba(0,0,0,1),0_4px_8px_rgba(0,0,0,0.3)] hover:brightness-110 dark:border-black/10 dark:bg-gradient-to-b dark:from-gray-50 dark:to-gray-200/70 dark:text-black dark:shadow-[inset_0_1px_0_rgba(255,255,255,1),0_1px_2px_rgba(0,0,0,0.05)] dark:hover:brightness-95",
+          "border border-zinc-800 bg-gradient-to-b from-zinc-600 to-zinc-950 text-white shadow-[inset_0px_1px_1px_rgba(255,255,255,0.2),inset_0px_-1px_1px_rgba(0,0,0,0.5),0px_4px_8px_rgba(0,0,0,0.4)] hover:brightness-110 dark:border-white/20 dark:bg-gradient-to-b dark:from-white/90 dark:to-white/70 dark:text-black dark:shadow-[inset_0px_1px_1px_rgba(255,255,255,0.8),0px_4px_8px_rgba(0,0,0,0.1)] dark:backdrop-blur-md dark:hover:brightness-95",
         // Ghost: no border, subtle hover
         ghost:
           "border-transparent bg-transparent text-[#374151] hover:bg-[#f3f4f6] dark:text-[#dbdee1] dark:hover:bg-[#3f4147]",

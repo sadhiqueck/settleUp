@@ -1,9 +1,18 @@
 import { Input } from "@/shared/components/ui/input";
 import { ChevronRight, X, Loader2 } from "lucide-react";
 import { GoogleIcon } from "@/shared/components/ui/icons";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/shared/components/ui/tooltip";
 import { Button } from "@/shared/components/ui/button";
-import { Field, FieldLabel, FieldDescription, FieldSeparator } from "@/shared/components/ui/field";
+import {
+  Field,
+  FieldLabel,
+  FieldDescription,
+  FieldSeparator,
+} from "@/shared/components/ui/field";
 
 interface EmailInputStepProps {
   email: string;
@@ -36,22 +45,22 @@ export function EmailInputStep({
             className={email.length > 0 ? "pr-8" : ""}
           />
           {email.length > 0 && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    onClick={() => setEmail("")}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full hover:bg-muted/50 transition-colors"
-                    aria-label="Clear email"
-                  >
-                    <X className="size-3.5" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent className="text-xs">
-                  <p>Clear Email</p>
-                </TooltipContent>
-              </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setEmail("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full hover:bg-muted/50 transition-colors"
+                  aria-label="Clear email"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="text-xs">
+                <p>Clear Email</p>
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
         <FieldDescription className="mb-2 text-xs">
@@ -61,7 +70,7 @@ export function EmailInputStep({
           type="submit"
           variant="outline"
           disabled={isLoading || cooldown > 0}
-          className="w-full justify-center opacity-75 font-normal gap-1 transition-all"
+          className="w-full justify-center font-medium gap-1 transition-all text-muted-foreground"
         >
           {isLoading ? (
             <Loader2 className="size-4 animate-spin" />
@@ -70,7 +79,7 @@ export function EmailInputStep({
           ) : (
             <>
               Continue with email
-              <ChevronRight className="size-4 opacity-50" strokeWidth={3} />
+              <ChevronRight className="size-4 opacity-60" strokeWidth={2.8} />
             </>
           )}
         </Button>
@@ -85,9 +94,9 @@ export function EmailInputStep({
           variant="glassyInverted"
           type="button"
           onClick={onGoogleLogin}
-          className="w-full gap-1.5 font-normal"
+          className="w-full gap-1.5 font-normal opacity-90"
         >
-          <GoogleIcon size={26} />
+          <GoogleIcon size={18} />
           Continue with Google
         </Button>
       </Field>
