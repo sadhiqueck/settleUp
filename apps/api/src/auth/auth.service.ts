@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as crypto from 'crypto';
 import type { PasswordlessStartInput } from '@fettl/shared';
 import { decryptVpaSafe } from '../common/utils/encryption';
+import { getMagicLinkEmailTemplate } from './templates/magic-link.template';
 import { Resend } from 'resend';
 import { ConfigService } from '@nestjs/config';
 
@@ -70,8 +71,7 @@ export class AuthService {
       from: 'Fettl <noreply@sqck.online>',
       to: dto.email,
       subject: 'Your Fettl login code',
-      html: `<p>Your OTP is: <strong>${otp}</strong> (expires in 15 minutes)</p>
-         <p>Or <a href="${magicLink}">click here to login</a></p>`,
+      html: getMagicLinkEmailTemplate(otp, magicLink),
     });
     return { message: 'Verification sent' };
   }
