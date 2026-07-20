@@ -7,6 +7,7 @@ import {
   Query,
   BadRequestException,
   UsePipes,
+  Header,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -21,6 +22,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('me')
+  @Header('Cache-Control', 'no-store, max-age=0')
   getProfile(@GetUser('id') userId: string) {
     return this.userService.getProfile(userId);
   }

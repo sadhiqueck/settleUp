@@ -123,7 +123,7 @@ export function ExpenseDetailsModal({
                           </span>
                         </div>
                         <div className="text-right flex flex-col items-end">
-                          <span className={`font-bold ${isPayer ? "text-neon-green" : "text-amber-600 dark:text-amber-500"}`}>
+                          <span className={`font-bold ${isPayer ? "text-neon-green" : "text-primary"}`}>
                             {formatCurrency(split.amount)}
                           </span>
                           <span className="text-[10px] text-muted-foreground font-medium mt-0.5">
@@ -135,7 +135,7 @@ export function ExpenseDetailsModal({
                       {/* Visual Progress Bar (simulated share) */}
                       <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full ${isPayer ? "bg-neon-green" : "bg-amber-500"}`}
+                          className={`h-full rounded-full ${isPayer ? "bg-neon-green" : "bg-primary"}`}
                           style={{ width: `${sharePercentage}%` }}
                         />
                       </div>

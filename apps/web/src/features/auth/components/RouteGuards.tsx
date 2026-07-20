@@ -60,7 +60,7 @@ export function OnboardingRoute() {
 }
 
 export function PublicRoute() {
-  const { data: user, isLoading } = useUserProfile();
+  const { data: user, isLoading, isError } = useUserProfile();
 
   if (isLoading) {
     return (
@@ -70,8 +70,8 @@ export function PublicRoute() {
     );
   }
 
-  // If they are logged in and we have user data, go to dashboard
-  if (user) {
+  // If they are logged in and we have user data (and no error), go to dashboard
+  if (user && !isError) {
     return <Navigate to="/dashboard" replace />;
   }
 

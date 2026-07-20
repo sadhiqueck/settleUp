@@ -8,7 +8,7 @@ import {
   DialogFooter,
 } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
-import { AlertTriangle, ExternalLink, Copy, Check, Download } from "lucide-react";
+import { AlertCircle, ExternalLink, Copy, Check, Download } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
 interface UpiPayButtonProps {
@@ -196,12 +196,11 @@ export function UpiPayButton({
           </div>
 
           {/* Warning */}
-          <div className="bg-amber-500/5 border border-amber-500/15 rounded-2xl p-3 flex gap-3">
-            <AlertTriangle
-              size={16}
-              className="text-amber-600 shrink-0 mt-0.5"
-            />
-            <p className="text-xs text-amber-700 leading-relaxed">
+          <div className="bg-primary/5 border border-primary/15 rounded-2xl p-3 flex gap-3">
+            <div className="shrink-0 mt-0.5">
+              <AlertCircle size={16} className="text-primary" />
+            </div>
+            <p className="text-xs text-primary/80 leading-relaxed">
               Please verify the recipient's name matches your friend's name on
               your UPI app before entering your PIN.
             </p>

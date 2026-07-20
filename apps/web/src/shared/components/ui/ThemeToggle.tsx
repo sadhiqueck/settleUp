@@ -6,7 +6,7 @@ const COLORS: { name: string; value: ThemeColor; className: string }[] = [
   { name: "Indigo", value: "indigo", className: "bg-indigo-500" },
   { name: "Emerald", value: "emerald", className: "bg-emerald-500" },
   { name: "Rose", value: "rose", className: "bg-rose-500" },
-  { name: "Amber", value: "amber", className: "bg-amber-500" },
+  { name: "Brand", value: "brand", className: "bg-[#cbe37a]" },
 ];
 
 export function ThemeToggle() {

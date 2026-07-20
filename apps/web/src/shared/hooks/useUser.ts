@@ -2,13 +2,20 @@ import { apiClient } from "@/shared/lib/apiClient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { User, UpdateProfileInput } from "@fettl/shared";
 import { disconnectSocket } from "@/shared/lib/socket";
+import { toast } from "sonner";
 
 const userKeys = {
   profile: ["user", "profile"] as const,
 };
 
 async function fetchUserProfile(): Promise<User> {
-  const { data } = await apiClient.get<User>("/users/me");
+  const { data } = await apiClient.get<User>("/users/me", {
+    headers: {
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
+    },
+  });
   return data;
 }
 
@@ -51,6 +58,16 @@ export function useLogout() {
       disconnectSocket();
       queryClient.clear();
       window.location.href = "/login";
+    },
+    onError: (error) => {
+      console.error("Logout failed:", error);
+      toast.error("Failed to log out. Please try clearing your cookies.");
+      // Fallback: force clear cache anyway
+      disconnectSocket();
+      queryClient.clear();
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 100);
     },
   });
 }

@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 import { useTheme as useNextTheme } from 'next-themes';
 
-export type ThemeColor = 'indigo' | 'emerald' | 'rose' | 'amber';
+export type ThemeColor = 'indigo' | 'emerald' | 'rose' | 'brand';
 
 export interface ThemeProviderContext {
   themeColor: ThemeColor;

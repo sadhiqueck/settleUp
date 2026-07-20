@@ -104,21 +104,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Decorative background glows */}
-      <div
-        className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full opacity-10 pointer-events-none"
-        style={{
-          background: "radial-gradient(circle, var(--theme-primary) 0%, transparent 70%)",
-          filter: "blur(60px)",
-        }}
-      />
-      <div
-        className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] rounded-full opacity-[0.05] pointer-events-none"
-        style={{
-          background: "radial-gradient(circle, var(--theme-primary) 0%, transparent 70%)",
-          filter: "blur(50px)",
-        }}
-      />
+      {/* Decorative background glows removed as requested */}
 
       <div className="w-full max-w-md relative z-10">
         {/* Progress indicator */}

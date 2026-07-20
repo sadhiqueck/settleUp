@@ -29,13 +29,21 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
   // Pass-through for API requests, WebSocket, and non-GET requests
+  const isApiRequest = 
+    url.port === '3000' || 
+    url.hostname.includes('api') || 
+    event.request.headers.get('Accept')?.includes('application/json');
+
   if (
     event.request.method !== 'GET' ||
-    event.request.url.includes('/api/') ||
-    event.request.url.includes('/auth/') ||
-    event.request.url.includes('socket.io') ||
-    event.request.url.startsWith('chrome-extension')
+    isApiRequest ||
+    url.pathname.includes('/api/') ||
+    url.pathname.includes('/auth/') ||
+    url.hostname.includes('socket.io') ||
+    url.protocol.startsWith('chrome-extension')
   ) {
     return;
   }

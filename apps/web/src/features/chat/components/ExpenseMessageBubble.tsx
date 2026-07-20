@@ -140,7 +140,7 @@ export const ExpenseMessageBubble = React.memo(function ExpenseMessageBubble({
             {formatCurrency(expense.amount)}
           </p>
           
-          <div className="mt-2 bg-amber-500/10 text-amber-600 dark:text-amber-500 px-2 py-1 rounded-md text-xs font-semibold border border-amber-500/20 inline-block">
+          <div className="mt-2 bg-primary/10 text-primary px-2 py-1 rounded-md text-xs font-semibold border border-primary/20 inline-block">
             Your share: {formatCurrency(myShare)}
           </div>
           
